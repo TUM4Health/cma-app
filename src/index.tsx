@@ -4,24 +4,35 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { ThemeProvider } from '@emotion/react';
+import theme from './theme/theme';
+import LoginPage from './pages/login/login.page';
+import ProtectedRoute, { ProtectedRouteProps } from './components/authentication/ProtectedRoute';
+import { authenticationService } from './services/authentication.service';
+import DashboardPage from './pages/dashboard/dashboard.page';
+import UsersPage from './pages/users/users.page';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
+const defaultProtectedRouteProps: Omit<ProtectedRouteProps, 'outlet'> = {
+  isAuthenticated: authenticationService.currentUser != null,
+  authenticationPath: '/login',
+};
+
+
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />}>
-          {/* <Route index element={<Home />} />
-          <Route path="teams" element={<Teams />}>
-            <Route path=":teamId" element={<Team />} />
-            <Route path="new" element={<NewTeamForm />} />
-            <Route index element={<LeagueStandings />} />
-          </Route> */}
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <Routes>
+          <Route path='/' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<DashboardPage />} />} />
+          <Route path='/users' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<UsersPage />} />} />
+          <Route path="login" element={<LoginPage />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   </React.StrictMode>
 );
 
