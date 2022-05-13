@@ -13,7 +13,7 @@ export const authenticationService = {
     get currentUserValue() {
         return currentUserSubject.value == null
             ? null
-            : currentUserSubject.value.data;
+            : currentUserSubject.value;
     },
 };
 
@@ -42,5 +42,6 @@ function logout() {
     // remove user from local storage to log user out
     localStorage.removeItem("currentUser");
     currentUserSubject.next(null);
-    window.location.reload();
+    // window.location.pathname = "/login";
+    // window.location.reload();
 }

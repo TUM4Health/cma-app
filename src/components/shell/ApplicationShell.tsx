@@ -1,4 +1,4 @@
-import { Dashboard, People } from '@mui/icons-material';
+import { Dashboard, Newspaper, People } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -27,7 +27,8 @@ type NavigationItem = {
 
 const navigationItems: NavigationItem[] = [
     { name: "Dashboard", target: "/", icon: <Dashboard /> },
-    { name: "Users", target: "/users", icon: <People /> }
+    { name: "Users", target: "/users", icon: <People /> },
+    { name: "Articles", target: "/articles", icon: <Newspaper /> }
 ]
 
 interface Props {
@@ -120,6 +121,7 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
                 component="main"
                 sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
             >
+                <Toolbar />
                 {props.children}
             </Box>
         </Box>

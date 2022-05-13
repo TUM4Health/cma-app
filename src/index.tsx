@@ -10,6 +10,7 @@ import ProtectedRoute, { ProtectedRouteProps } from './components/authentication
 import { authenticationService } from './services/authentication.service';
 import DashboardPage from './pages/dashboard/dashboard.page';
 import UsersPage from './pages/users/users.page';
+import ArticlesPage from './pages/articles/articles.page';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -28,6 +29,7 @@ root.render(
         <Routes>
           <Route path='/' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<DashboardPage />} />} />
           <Route path='/users' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<UsersPage />} />} />
+          <Route path='/articles' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ArticlesPage />} />} />
           <Route path="login" element={<LoginPage />} />
         </Routes>
       </BrowserRouter>
