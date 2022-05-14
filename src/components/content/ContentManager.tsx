@@ -1,6 +1,4 @@
-import { DataGrid, GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
 import ContentList from "./ContentList";
-import ContentListfrom from './ContentList';
 
 export interface EntityField {
     name: string,
@@ -12,7 +10,7 @@ interface Props {
     entityName: string,
     entityId: string,
     entityFields: EntityField[],
-    hiddenFields?: string[]
+    hideFromPreview?: string[]
 }
 
 export default function ContentManager(props: React.PropsWithChildren<Props>) {
@@ -21,7 +19,7 @@ export default function ContentManager(props: React.PropsWithChildren<Props>) {
             entityName={props.entityName}
             entityId={props.entityId}
             entityFields={props.entityFields}
-            hiddenFields={props.hiddenFields ?? []}
+            hideFromPreview={props.hideFromPreview ?? []}
         />
     </>
 }

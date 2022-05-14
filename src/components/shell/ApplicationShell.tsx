@@ -1,5 +1,6 @@
-import { Dashboard, Newspaper, People } from '@mui/icons-material';
+import { Dashboard, People } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
+import { ListSubheader } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -16,6 +17,7 @@ import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { ReactElement } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import content from '../../content/content';
 
 const drawerWidth = 240;
 
@@ -25,11 +27,17 @@ type NavigationItem = {
     icon: ReactElement,
 }
 
+
 const navigationItems: NavigationItem[] = [
     { name: "Dashboard", target: "/", icon: <Dashboard /> },
     { name: "Users", target: "/users", icon: <People /> },
-    { name: "Articles", target: "/articles", icon: <Newspaper /> }
 ]
+
+const contentNavigationItems: NavigationItem[] = Object.keys(content).map((key) => ({
+    name: content[key].title,
+    target: `/content/${key}`,
+    icon: content[key].icon
+}))
 
 interface Props {
     title: string
@@ -49,6 +57,24 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
             <Divider />
             <List>
                 {navigationItems.map((item, index) => (
+                    <ListItem key={item.name} disablePadding>
+                        <ListItemButton selected={location.pathname === item.target} component={Link} to={item.target}>
+                            <ListItemIcon>
+                                {item.icon}
+                            </ListItemIcon>
+                            <ListItemText primary={item.name} />
+                        </ListItemButton>
+                    </ListItem>
+                ))}
+            </List>
+            <Divider />
+            <List
+                subheader={
+                    <ListSubheader>
+                        Content
+                    </ListSubheader>
+                }>
+                {contentNavigationItems.map((item, index) => (
                     <ListItem key={item.name} disablePadding>
                         <ListItemButton selected={location.pathname === item.target} component={Link} to={item.target}>
                             <ListItemIcon>

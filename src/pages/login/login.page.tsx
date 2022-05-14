@@ -1,9 +1,9 @@
 import { LoadingButton } from "@mui/lab";
-import { Alert, Button, Card, CardActions, CardContent, Container, Divider, TextField, Typography } from "@mui/material";
+import { Alert, Card, CardActions, CardContent, Container, Divider, TextField, Typography } from "@mui/material";
 import { Formik } from "formik";
-import React, { ReactElement, FC } from "react";
-import { authenticationService } from '../../services/authentication.service';
+import { FC, ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
+import { authenticationService } from '../../services/authentication.service';
 
 const LoginPage: FC<any> = (): ReactElement => {
     const navigate = useNavigate();

@@ -18,7 +18,7 @@ const ArticlesPage: FC<any> = (): ReactElement => {
                 entityId="news-articles"
                 entityName="News-Articles"
                 entityFields={articleEntityFields}
-                hiddenFields={["id", "articleText"]}
+                hideFromPreview={["id", "articleText"]}
             />
         </ApplicationShell>
     );
