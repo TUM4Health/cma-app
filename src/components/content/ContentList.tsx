@@ -45,10 +45,8 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
             flex: 1,
             renderCell: (params: GridValueGetterParams) => getActions(params.row.id, props.entityId)
         });
-        console.log(props);
 
-        console.log(newColumns);
-
+        setContent([]);
         setColumns(newColumns);
 
         // Then update content
