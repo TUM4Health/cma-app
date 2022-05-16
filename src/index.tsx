@@ -11,6 +11,7 @@ import UsersPage from './pages/users/users.page';
 import reportWebVitals from './reportWebVitals';
 import { authenticationService } from './services/authentication.service';
 import theme from './theme/theme';
+import ContentEditPage from './pages/content_edit/content_edit.page';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -29,11 +30,8 @@ root.render(
         <Routes>
           <Route path='/' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<DashboardPage />} />} />
           <Route path='/users' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<UsersPage />} />} />
-          <Route path="/content/:id" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentPage />} />} >
-            <Route path="/content/:id/edit" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentPage />} />} >
-
-            </Route>
-          </Route>
+          <Route path="/content/:entityId/edit/:id" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentEditPage />} />} />
+          <Route path="/content/:entityId" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentPage />} />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

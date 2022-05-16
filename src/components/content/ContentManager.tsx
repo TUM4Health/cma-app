@@ -1,10 +1,5 @@
+import { EntityField } from "../../content/content";
 import ContentList from "./ContentList";
-
-export interface EntityField {
-    name: string,
-    key: string,
-    type: string,
-}
 
 interface Props {
     entityName: string,

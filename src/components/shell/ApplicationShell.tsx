@@ -34,7 +34,7 @@ const navigationItems: NavigationItem[] = [
 ]
 
 const contentNavigationItems: NavigationItem[] = Object.keys(content).map((key) => ({
-    name: content[key].title,
+    name: content[key].pluralTitle ?? content[key].title,
     target: `/content/${key}`,
     icon: content[key].icon
 }))

@@ -4,7 +4,7 @@ import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
 import { contentService } from '../../services/content.service';
-import { EntityField } from "./ContentManager";
+import { EntityField } from '../../content/content';
 
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
 const getActions = (id: number, entityId: string) => (
     <>
         <Tooltip title="Edit">
-            <IconButton component={Link} to={`/${entityId}/edit`} >
+            <IconButton component={Link} to={`/content/${entityId}/edit/${id}`} >
                 <Edit />
             </IconButton>
         </Tooltip>
