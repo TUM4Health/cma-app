@@ -10,8 +10,8 @@ import LoginPage from './pages/login/login.page';
 import UsersPage from './pages/users/users.page';
 import reportWebVitals from './reportWebVitals';
 import { authenticationService } from './services/authentication.service';
-import theme from './theme/theme';
 import ContentEditPage from './pages/content_edit/content_edit.page';
+import ThemeConfig from './theme/theme';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -25,7 +25,7 @@ const defaultProtectedRouteProps: Omit<ProtectedRouteProps, 'outlet'> = {
 
 root.render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
+    <ThemeConfig>
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<DashboardPage />} />} />
@@ -36,7 +36,7 @@ root.render(
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
-    </ThemeProvider>
+    </ThemeConfig>
   </React.StrictMode>
 );
 
