@@ -30,7 +30,7 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Article Text", key: "articleText", type: "richtext", editable: true },
             { name: "Title-Image", key: "titleImage", type: "image", editable: true },
             { name: "Article-Media", key: "articleMedia", type: "image", editable: true },
-            { name: "Tags", key: "tags", type: "chips", editable: true },
+            { name: "Tags", key: "tags", type: "string", editable: true },
         ],
         hideFromPreview: ["id", "articleText", "subheadline", "titleImage", "articleMedia"],
         icon: <Newspaper />

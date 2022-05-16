@@ -1,4 +1,6 @@
-import { CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import { Done, Restore } from '@mui/icons-material';
+import { LoadingButton } from '@mui/lab';
+import { Backdrop, Button, CircularProgress, Stack, TextField, Toolbar, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import { ChangeEventHandler, ReactElement, useEffect, useState } from 'react';
 import content, { EntityField } from '../../content/content';
@@ -50,14 +52,14 @@ function getFormComponent(values: any, field: EntityField, handleChange: ChangeE
     if (field.type === "date") {
         return <FormDateField
             key={field.key}
-            name={field.name}
+            name={field.key}
             helperText={""}
             label={field.name} />;
     }
     if (field.type === "image") {
         return <FileUploadField
             key={field.key}
-            name={field.name}
+            name={field.key}
             helperText={""}
             label={field.name}
         />;
@@ -68,6 +70,7 @@ function getFormComponent(values: any, field: EntityField, handleChange: ChangeE
 export default function ContentEditManager(props: React.PropsWithChildren<Props>) {
     const data = content[props.entityId!];
     const [obj, setObj] = useState({} as any);
+    const [initialValues, setInitialValues] = useState({});
 
     useEffect(() => {
         contentService.use(props.entityId).getSingle(props.objectId).then((response) => {
@@ -75,19 +78,37 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         });
     }, [props]);
 
-    console.log(obj);
+    useEffect(() => {
+        const initialValues: { [key: string]: any } = {};
+        data.entityFields.forEach((field) => {
+            initialValues[field.key] = obj.data ? obj.data.attributes[field.key] ?? '' : '';
+        });
+        setInitialValues(initialValues);
+    }, [data.entityFields, obj]);
+
+    if (Object.keys(obj).length === 0) {
+        return <Backdrop
+            open={true}
+            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        >
+            <CircularProgress color="inherit" />
+        </Backdrop>
+    }
+
+
 
 
     return <>
-        <Typography variant="h4" component="h1" >
-            {props.objectId === -1 ? "Create" : "Edit"}
-            {` ${props.entityName}`}
-        </Typography>
-        {Object.keys(obj).length > 0 && <Formik
+        <Formik
             enableReinitialize
-            initialValues={{ 'id': obj.data.id, ...obj.data.attributes }}
+            initialValues={initialValues}
             onSubmit={(values, { setSubmitting, setFieldError }) => {
-
+                console.log("Submitting...");
+                console.log(values);
+                // TODO: replace
+                setTimeout(() => {
+                    setSubmitting(false);
+                }, 2000);
             }}
         >
             {({
@@ -100,16 +121,30 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                 isSubmitting,
                 /* and other goodies */
             }) => (
-                <form onSubmit={handleSubmit}>
-                    <Stack>
-                        {data.entityFields
-                            .filter((field) => field.viewable ?? true)
-                            .map((field) => getFormComponent(values, field, handleChange, handleBlur))
-                        }
-                    </Stack>
-                </form>
+                <>
+                    <form onSubmit={handleSubmit}>
+                        <Toolbar>
+                            <Typography variant="h4" component="h1" sx={{ mb: 2 }} >
+                                {props.objectId === -1 ? "Create" : "Edit"}
+                                {` ${props.entityName}`}
+                            </Typography>
+                            <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: "auto" }}>
+                                Reset
+                            </Button>
+                            <LoadingButton loading={isSubmitting} variant="contained" type="submit" color="success" startIcon={<Done />} sx={{ ml: 2 }}>
+                                Save
+                            </LoadingButton>
+                        </Toolbar>
+                        <Stack>
+                            {data.entityFields
+                                .filter((field) => field.viewable ?? true)
+                                .map((field) => getFormComponent(values, field, handleChange, handleBlur))
+                            }
+                        </Stack>
+                    </form>
+                </>
             )}
-        </Formik>}
+        </Formik>
         {Object.keys(obj).length === 0 && <CircularProgress />}
     </>
 }

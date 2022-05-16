@@ -1,18 +1,26 @@
 import { authHeader } from "../utils/auth-header";
 import { handleResponse } from "../utils/handle-response";
 
+export interface NamedFile {
+    name: string,
+    fileName: string,
+    file: File
+}
+
 const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 export function genericCrudService(path: string) {
     const getSingle = (id: number) => _getSingle(path, id);
     const getAll = () => _getAll(path);
     const update = (data: any, id: number) => _update(data, id, path);
     const create = (data: any) => _create(data, path);
+    const createWithFiles = (data: any, files: NamedFile[]) => _createWithFiles(data, files, path);
     const deleteEntity = (id: number) => _deleteEntity(id, path);
     return {
         getSingle,
         getAll,
         update,
         create,
+        createWithFiles,
         deleteEntity,
     };
 }
@@ -54,6 +62,25 @@ async function _create(data: any, path: string) {
         method: "POST",
         headers: headers,
         body: JSON.stringify(data),
+    };
+    const response = await fetch(`${SERVER_URL}/api/${path}`, requestOptions);
+    return handleResponse(response);
+}
+
+async function _createWithFiles(data: any, files: NamedFile[], path: string) {
+    var headers = authHeader();
+    headers["Content-Type"] = "application/json";
+
+    var formData = new FormData();
+    for (var file of files) {
+        formData.append(`files.${file.name}`, file.file, file.fileName);
+    }
+    formData.append("data", JSON.stringify(data));
+
+    const requestOptions: RequestInit = {
+        method: "POST",
+        headers: headers,
+        body: formData,
     };
     const response = await fetch(`${SERVER_URL}/api/${path}`, requestOptions);
     return handleResponse(response);

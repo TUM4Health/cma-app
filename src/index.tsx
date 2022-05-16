@@ -1,16 +1,15 @@
-import { ThemeProvider } from '@emotion/react';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute, { ProtectedRouteProps } from './components/authentication/ProtectedRoute';
 import './index.css';
 import ContentPage from './pages/content/content.page';
+import ContentEditPage from './pages/content_edit/content_edit.page';
 import DashboardPage from './pages/dashboard/dashboard.page';
 import LoginPage from './pages/login/login.page';
 import UsersPage from './pages/users/users.page';
 import reportWebVitals from './reportWebVitals';
 import { authenticationService } from './services/authentication.service';
-import ContentEditPage from './pages/content_edit/content_edit.page';
 import ThemeConfig from './theme/theme';
 
 const root = ReactDOM.createRoot(

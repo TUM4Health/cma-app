@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import ContentEditManager from '../../components/content/ContentEditManager';
 import ApplicationShell from '../../components/shell/ApplicationShell';
 import content from "../../content/content";
+import { Container } from '@mui/material';
 
 
 const ContentEditPage: FC<any> = (): ReactElement => {
@@ -14,13 +15,15 @@ const ContentEditPage: FC<any> = (): ReactElement => {
         <ApplicationShell
             title={`TUM4Health | ${data.title}`}
         >
-            <ContentEditManager
-                objectId={objectId}
-                entityId={params.entityId!}
-                entityName={data.title}
-                entityFields={data.entityFields}
-                hideFromPreview={data.hideFromPreview}
-            />
+            <Container>
+                <ContentEditManager
+                    objectId={objectId}
+                    entityId={params.entityId!}
+                    entityName={data.title}
+                    entityFields={data.entityFields}
+                    hideFromPreview={data.hideFromPreview}
+                />
+            </Container>
         </ApplicationShell>
     );
 };

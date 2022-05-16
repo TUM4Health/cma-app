@@ -22,12 +22,7 @@ export default function ThemeConfig({ children }: React.PropsWithChildren<Props>
     []
   );
 
-  console.log(themeOptions);
-
-
   const theme = createTheme(themeOptions as any);
-  console.log(theme);
-
   theme.components = componentsOverride(theme);
 
   return (

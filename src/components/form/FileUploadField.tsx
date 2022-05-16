@@ -25,7 +25,7 @@ export default function FileUploadField({ label, helperText, name }: Props) {
                     variant='contained'
                     component='label'
                     startIcon={<CloudUpload />}>
-                    {`Choose ${name}`}
+                    {`Choose ${label}`}
                     <input
                         name={name}
                         accept='image/*'
@@ -35,7 +35,7 @@ export default function FileUploadField({ label, helperText, name }: Props) {
                             const fileReader = new FileReader();
                             fileReader.onload = () => {
                                 if (fileReader.readyState === 2) {
-                                    setValue(fileReader.result);
+                                    setValue(e.target.files![0]);
                                     setImagePreview(fileReader.result as string);
                                 }
                             };
