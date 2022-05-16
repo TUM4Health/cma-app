@@ -3,7 +3,7 @@ import { handleResponse } from "../utils/handle-response";
 
 export interface NamedFile {
     name: string,
-    fileName: string,
+    fileName?: string,
     file: File
 }
 
@@ -30,7 +30,7 @@ async function _getSingle(path: string, id: number) {
         method: "GET",
         headers: authHeader(),
     };
-    const response = await fetch(`${SERVER_URL}/api/${path}/${id}`, requestOptions);
+    const response = await fetch(`${SERVER_URL}/api/${path}/${id}?populate=*`, requestOptions);
     return handleResponse(response);
 }
 
@@ -39,7 +39,7 @@ async function _getAll(path: string) {
         method: "GET",
         headers: authHeader(),
     };
-    const response = await fetch(`${SERVER_URL}/api/${path}`, requestOptions);
+    const response = await fetch(`${SERVER_URL}/api/${path}?populate=*`, requestOptions);
     return handleResponse(response);
 }
 

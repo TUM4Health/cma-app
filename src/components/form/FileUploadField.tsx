@@ -1,5 +1,5 @@
 import { CloudUpload } from '@mui/icons-material';
-import { Avatar, Button, ImageList, ImageListItem, Stack } from '@mui/material';
+import { Button, ImageList, ImageListItem, Stack } from '@mui/material';
 import Box from '@mui/material/Box';
 import { useField } from 'formik';
 import { useState } from 'react';

@@ -4,26 +4,48 @@ import { handleResponse } from "../utils/handle-response";
 const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 /**
  * Uploads a file to the STRAPI Upload API
- * @param file the file object to upload
- * @param ref the uid of the model
+ * @param files the file object to upload
+ * @param entityId the uid of the entity
  * @param refId the id of the entry to connect to
  * @param field the field of the entry to connect to
  * @returns 
  */
-async function _uploadFile(file: File, ref: string, refId: string, field: string) {
+export async function uploadFiles(files: File[], entityId: string, refId: number, field: string) {
     var headers = authHeader();
-    headers["Content-Type"] = "application/json";
     var formData = new FormData();
-    formData.append("ref", ref);
-    formData.append("refId", refId);
+    formData.append("ref", `api::${entityId}.${entityId}`);
+    formData.append("refId", `${refId}`);
     formData.append("field", field);
-    formData.append("files", file);
+    files.forEach((file) => formData.append("files", file));
     const requestOptions: RequestInit = {
         method: "POST",
         headers: headers,
         body: formData
     };
+    console.log(`Ref: api::${entityId}.${entityId}`);
+    console.log(`RefId: ${refId}`);
+    console.log(`field: ${field}`);
+
     const response = await fetch(`${SERVER_URL}/api/upload`, requestOptions);
     return handleResponse(response);
 }
 
+export async function deleteFile(fileId: number) {
+    var headers = authHeader();
+    const requestOptions: RequestInit = {
+        method: "DELETE",
+        headers: headers,
+    };
+    const response = await fetch(`${SERVER_URL}/api/upload/files/${fileId}`, requestOptions);
+    return handleResponse(response);
+}
+
+export function getImageUrl(imageValue: any) {
+    if (imageValue == null || imageValue.data == null) return '';
+    return `${SERVER_URL}${imageValue.data.attributes.url}`;
+}
+
+export function getImageUrls(imageValue: any) {
+    if (imageValue == null || imageValue.data == null) return [];
+    return imageValue.data.map((item: any) => `${SERVER_URL}${item.attributes.url}`);
+}

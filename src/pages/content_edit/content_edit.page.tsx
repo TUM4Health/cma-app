@@ -19,9 +19,6 @@ const ContentEditPage: FC<any> = (): ReactElement => {
                 <ContentEditManager
                     objectId={objectId}
                     entityId={params.entityId!}
-                    entityName={data.title}
-                    entityFields={data.entityFields}
-                    hideFromPreview={data.hideFromPreview}
                 />
             </Container>
         </ApplicationShell>
