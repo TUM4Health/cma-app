@@ -3,15 +3,15 @@ import { LoadingButton } from '@mui/lab';
 import { Alert, Backdrop, Button, CircularProgress, Stack, TextField, Toolbar, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import { ChangeEventHandler, ReactElement, useEffect, useState } from 'react';
-import content, { EntityField } from '../../content/content';
+import content, { ContentConfiguration, EntityField } from '../../content/content';
 import { contentService, wrapInData } from '../../services/content.service';
+import { NamedFile } from '../../services/generic_crud.service';
+import { deleteFile, getImageUrl, getImageUrls, uploadFiles } from '../../services/upload.service';
+import { getEmptyValueByType } from '../../utils/typeUtil';
 import RichEditor from '../editor/RichEditor';
 import FileUploadField from '../form/FileUploadField';
 import FormDateField from '../form/FormDateField';
-import { getImageUrl, uploadFiles, getImageUrls, deleteFile } from '../../services/upload.service';
-import { NamedFile } from '../../services/generic_crud.service';
-import { ContentConfiguration } from '../../content/content';
-import { getEmptyValueByType } from '../../utils/typeUtil';
+import RefSelectorField, { AutocompleteOption, getItemAsValue } from '../form/RefSelectorField';
 
 interface Props {
     entityId: string,
@@ -72,7 +72,24 @@ function getFormComponent(values: any, field: EntityField, handleChange: ChangeE
             label={field.name}
         />;
     }
-    return <p>Invalid Type: {field.type}!</p>
+    if (field.type.match('ref:.*')) {
+        const refProperties = field.type.split(/ref:/)[1];
+        const refKey = refProperties.split(":")[0];
+        if (refProperties.split(":")[1] == null) {
+            return <Alert severity='error' sx={{ my: 1 }}>Missing reference fields for: {field.key}!</Alert>
+        }
+        const refFields = refProperties.split(":")[1].split(",");
+        return <RefSelectorField
+            key={field.key}
+            name={field.key}
+            helperText={""}
+            multiple={field.multiple}
+            label={field.name}
+            refKey={refKey}
+            refFields={refFields}
+        />
+    }
+    return <Alert severity='error' sx={{ my: 1 }}>Invalid Type: {field.type}!</Alert>
 }
 
 /**
@@ -144,6 +161,25 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                 } else {
                     initialValues[field.key] = getImageUrl(obj.data.attributes[field.key]);
                 }
+            } else if (field.type.match(/ref:/) && obj.data != null) {
+                // Read the refProperties to set the value to the correct label
+                const refProperties = field.type.split(/ref:/)[1];
+                // If no properties provided, cancel => error in content file
+                if (refProperties.split(":")[1] == null) {
+                    return;
+                }
+                // read the fields to use in the label
+                const refFields = refProperties.split(":")[1].split(",");
+                // if a value is set
+                if (combinedData[field.key]) {
+                    // either set multiple or only a single value for the auto complete
+                    initialValues[field.key] = field.multiple ?
+                        getItemAsValue(combinedData[field.key].data ?? [], refFields) :
+                        getItemAsValue([combinedData[field.key].data], refFields)[0];
+                } else {
+                    // if no value given, set to default value
+                    initialValues[field.key] = field.multiple ? [] : null;
+                }
             } else {
                 initialValues[field.key] = combinedData[field.key] ?? '';
             }
@@ -164,7 +200,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         <Formik
             enableReinitialize
             initialValues={initialValues}
-            onSubmit={(values, { setSubmitting, setFieldError }) => {
+            onSubmit={(values: any, { setSubmitting, setFieldError }) => {
                 const nonFileFields: { [key: string]: any } = {};
                 const namedFiles: NamedFile[] = [];
                 try {
@@ -173,13 +209,13 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                         if (field.type === "image" || field.type === "file") {
                             // If (not multiple) value is string => value was not set, so do not add to file uploading
                             // Or (multiple) all values are strings => values were not changed, so do not add to file uploading
-                            if ((typeof (values as any)[field.key] != "string" && !field.multiple)
-                                || (field.multiple && !isArrayOfStrings((values as any)[field.key]))) {
+                            if ((typeof values[field.key] != "string" && !field.multiple)
+                                || (field.multiple && !isArrayOfStrings(values[field.key]))) {
                                 if (!field.multiple) {
-                                    namedFiles.push({ file: (values as any)[field.key] as File, name: field.key });
+                                    namedFiles.push({ file: values[field.key] as File, name: field.key });
                                 } else {
-                                    if (((values as any)[field.key] as any[]))
-                                        ((values as any)[field.key] as any[]).forEach(
+                                    if ((values[field.key] as any[]))
+                                        (values[field.key] as any[]).forEach(
                                             (iFile: File) => namedFiles.push({ file: iFile, name: field.key })
                                         );
                                 }
@@ -188,13 +224,18 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                                 if (obj.data && obj.data.attributes[field.key].data)
                                     nonFileFields[field.key] = obj.data.attributes[field.key].data.id;
                             }
-                        } else {
-                            if (field.type === "richtext" && typeof (values as any)[field.key] === "function") {
-                                // If richtext, use workaround to retrieve editors value
-                                nonFileFields[field.key] = (values as any)[field.key]();
+                        } else if (field.type === "richtext" && typeof values[field.key] === "function") {
+                            // If richtext, use workaround to retrieve editors value
+                            nonFileFields[field.key] = values[field.key]();
+                        } else if (field.type.match(/ref:/)) {
+                            // If reference, retrieve ids to set references                            
+                            if (field.multiple) {
+                                nonFileFields[field.key] = values[field.key].map((item: AutocompleteOption) => item.id);
                             } else {
-                                nonFileFields[field.key] = (values as any)[field.key];
+                                nonFileFields[field.key] = values[field.key].id;
                             }
+                        } else {
+                            nonFileFields[field.key] = values[field.key];
                         }
                     });
 
@@ -208,15 +249,17 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                                 var id = resp.data.id;
                                 setObjectId(id);
                                 window.history.replaceState(null, "", window.location.pathname.slice(0, -3) + id)
+                                setError(null);
                                 setSuccess("Entry created!");
                             }).catch((error) => {
                                 console.error(error);
                                 setSubmitting(false);
+                                setSuccess(null);
                                 setError("An Error has occurred, please try again! (" + error + ")");
                             });
                     } else {
                         // Update
-                        contentService.use(props.entityId).update(wrapInData(nonFileFields), props.objectId)
+                        contentService.use(props.entityId).update(wrapInData(nonFileFields), objectId)
                             .then(async (resp) => {
                                 const oldImageIds = getImageIds(obj, namedFiles.map((nm) => nm.name), data);
                                 // Now upload images & delete old
@@ -230,17 +273,20 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                                     ...oldImageIds.map((id) => deleteFile(id))]
                                 )
                                 setSubmitting(false);
+                                setError(null);
                                 setSuccess("Entry updated!");
                             })
                             .catch((error) => {
                                 console.error(error);
                                 setSubmitting(false);
+                                setSuccess(null);
                                 setError("An Error has occurred, please try again! (" + error + ")");
                             });
                     }
                 } catch (error) {
                     console.error(error);
                     setSubmitting(false);
+                    setSuccess(null);
                     setError("An Error has occurred, please try again! (" + error + ")");
                 }
             }}
@@ -253,7 +299,6 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                 handleBlur,
                 handleSubmit,
                 isSubmitting,
-                /* and other goodies */
             }) => (
                 <>
                     <form onSubmit={handleSubmit}>

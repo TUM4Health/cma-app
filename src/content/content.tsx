@@ -43,10 +43,10 @@ const content: { [key: string]: ContentConfiguration } = {
         apiId: "mental-healthcare",
         entityFields: [
             { name: "ID", key: "id", type: "number" },
-            { name: "Headline", key: "headline", type: "string" },
-            { name: "Subhead", key: "subhead", type: "string" },
-            { name: "Description", key: "description", type: "string" },
-            { name: "Content", key: "content", type: "richtext" },
+            { name: "Headline", key: "headline", type: "string", editable: true },
+            { name: "Subhead", key: "subhead", type: "string", editable: true },
+            { name: "Description", key: "description", type: "string", editable: true },
+            { name: "Content", key: "content", type: "richtext", editable: true },
         ],
         hideFromPreview: ["id", "content"],
         icon: <MedicalInformation />
@@ -56,7 +56,7 @@ const content: { [key: string]: ContentConfiguration } = {
         apiId: "covid",
         entityFields: [
             { name: "ID", key: "id", type: "number" },
-            { name: "Description", key: "description", type: "string" }
+            { name: "Description", key: "description", type: "string", editable: true }
         ],
         hideFromPreview: ["id"],
         icon: <Coronavirus />
@@ -66,13 +66,13 @@ const content: { [key: string]: ContentConfiguration } = {
         apiId: "doctor",
         entityFields: [
             { name: "ID", key: "id", type: "number" },
-            { name: "Location", key: "location", type: "ref:location" },
-            { name: "Name", key: "name", type: "string" },
-            { name: "Phone Number", key: "phoneNumber", type: "string" },
-            { name: "Room", key: "room", type: "string" },
-            { name: "Mail", key: "mail", type: "string" },
-            { name: "Specialty", key: "specialty", type: "string" },
-            { name: "Picture", key: "picture", type: "image" },
+            { name: "Location", key: "locations", type: "ref:locations:title", multiple: true, editable: true },
+            { name: "Name", key: "name", type: "string", editable: true },
+            { name: "Phone Number", key: "phoneNumber", type: "string", editable: true },
+            { name: "Room", key: "room", type: "string", editable: true },
+            { name: "Mail", key: "mail", type: "string", editable: true },
+            { name: "Specialty", key: "specialty", type: "string", editable: true },
+            { name: "Picture", key: "picture", type: "image", editable: true },
         ],
         hideFromPreview: ["id", "picture"],
         icon: <MedicalServices />
@@ -82,10 +82,10 @@ const content: { [key: string]: ContentConfiguration } = {
         apiId: "location",
         entityFields: [
             { name: "ID", key: "id", type: "number" },
-            { name: "Title", key: "title", type: "string" },
-            { name: "Description", key: "description", type: "string" },
-            { name: "Icon", key: "icon", type: "image" },
-            { name: "Content", key: "content", type: "richtext" },
+            { name: "Title", key: "title", type: "string", editable: true },
+            { name: "Description", key: "description", type: "string", editable: true },
+            { name: "Icon", key: "icon", type: "image", editable: true },
+            { name: "Content", key: "content", type: "richtext", editable: true },
         ],
         hideFromPreview: ["id", "content"],
         icon: <LocationCity />
@@ -94,11 +94,11 @@ const content: { [key: string]: ContentConfiguration } = {
         title: "Offering",
         apiId: "offerings",
         entityFields: [
-            { name: "ID", key: "id", type: "number" },
-            { name: "Type", key: "type", type: "string" },
-            { name: "Description", key: "description", type: "string" },
-            { name: "Offering Type", key: "offeringType", type: "enum" },
-            { name: "Icon", key: "icon", type: "image" },
+            { name: "ID", key: "id", type: "number", editable: true },
+            { name: "Type", key: "type", type: "string", editable: true },
+            { name: "Description", key: "description", type: "string", editable: true },
+            { name: "Offering Type", key: "offeringType", type: "enum", editable: true },
+            { name: "Icon", key: "icon", type: "image", editable: true },
         ],
         hideFromPreview: ["id"],
         icon: <RoomService />
