@@ -185,7 +185,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         setInitialValues(initialValues);
     }, [data.entityFields, obj]);
 
-    if (Object.keys(obj).length === 0) {
+    if (Object.keys(obj).length === 0 || Object.keys(initialValues).length === 0) {
         return <Backdrop
             open={true}
             sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
