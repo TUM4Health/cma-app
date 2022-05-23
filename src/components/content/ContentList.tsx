@@ -1,12 +1,12 @@
 import { Delete, Edit } from '@mui/icons-material';
-import { IconButton, Tooltip, Backdrop, CircularProgress, Avatar, Skeleton } from '@mui/material';
+import { Avatar, Backdrop, CircularProgress, IconButton, Skeleton, Tooltip } from '@mui/material';
 import { DataGrid, GridCellParams, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
-import { contentService } from '../../services/content.service';
 import { EntityField } from '../../content/content';
+import { contentService } from '../../services/content.service';
 import { getImageUrl } from '../../services/upload.service';
-import { log } from 'console';
+import ApproveDialog from '../util/ApproveDeleteDialog';
 
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
     hideFromPreview: string[]
 }
 
-const getActions = (id: number, entityId: string) => (
+const getActions = (id: number, entityId: string, onDelete: Function) => (
     <>
         <Tooltip title="Edit">
             <IconButton component={Link} to={`/content/${entityId}/edit/${id}`} >
@@ -24,7 +24,7 @@ const getActions = (id: number, entityId: string) => (
             </IconButton>
         </Tooltip>
         <Tooltip title="Delete">
-            <IconButton>
+            <IconButton onClick={() => onDelete(id)}>
                 <Delete />
             </IconButton>
         </Tooltip>
@@ -46,6 +46,20 @@ function renderCell(type: string) {
 export default function ContentList(props: React.PropsWithChildren<Props>) {
     const [content, setContent] = useState(null as any[] | null);
     const [columns, setColumns] = useState([] as GridColDef[]);
+    const [currentDeleteCandidate, setCurrentDeleteCandidate] = useState(-1);
+
+    const deleteEntity = (id: number) => {
+        contentService.use(props.entityId).deleteEntity(id).then(() => {
+            // Then update content
+            contentService.use(props.entityId).getAll().then((response) => {
+                setContent(response.data.map((item: any) => ({
+                    id: item.id,
+                    ...item.attributes,
+                })));
+            });
+        });
+        setCurrentDeleteCandidate(-1);
+    }
 
     useEffect(() => {
         // First update columns to new model
@@ -63,7 +77,10 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
             field: "actions",
             headerName: "Actions",
             flex: 1,
-            renderCell: (params: GridValueGetterParams) => getActions(params.row.id, props.entityId)
+            renderCell: (params: GridValueGetterParams) =>
+                getActions(params.row.id,
+                    props.entityId,
+                    (id: number) => setCurrentDeleteCandidate(id))
         });
 
         setContent(null);
@@ -87,13 +104,26 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
         </Backdrop>
     }
 
-    return <div style={{ height: 400, width: '100%' }}>
-        <DataGrid
-            rows={content ?? []}
-            columns={columns}
-            pageSize={5}
-            rowsPerPageOptions={[5]}
-            disableSelectionOnClick
+    return <>
+        <ApproveDialog
+            key="deleteEntity"
+            title={`Delete ${props.entityName}?`}
+            description={
+                `This action can not be reversed!`
+            }
+            approveTitle="Delete"
+            cancelTitle='Cancel'
+            handleApprove={() => deleteEntity(currentDeleteCandidate)}
+            handleCancel={() => setCurrentDeleteCandidate(-1)}
+            open={currentDeleteCandidate !== -1}
         />
-    </div>
+        <div style={{ height: 400, width: '100%' }}>
+            <DataGrid
+                rows={content ?? []}
+                columns={columns}
+                pageSize={5}
+                rowsPerPageOptions={[5]}
+                disableSelectionOnClick
+            />
+        </div></>
 }

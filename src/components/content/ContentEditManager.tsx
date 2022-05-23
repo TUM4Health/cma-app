@@ -2,7 +2,7 @@ import { Done, Restore } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import { Alert, Backdrop, Button, CircularProgress, Stack, TextField, Toolbar, Typography } from '@mui/material';
 import { Formik } from 'formik';
-import { ChangeEventHandler, ReactElement, useEffect, useState, useMemo } from 'react';
+import { ChangeEventHandler, ReactElement, useEffect, useState } from 'react';
 import content, { ContentConfiguration, EntityField } from '../../content/content';
 import { contentService, wrapInData } from '../../services/content.service';
 import { NamedFile } from '../../services/generic_crud.service';
