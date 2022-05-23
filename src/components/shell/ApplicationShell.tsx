@@ -1,4 +1,4 @@
-import { Add, Dashboard, People } from '@mui/icons-material';
+import { Dashboard, People } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Button, ListSubheader } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
@@ -26,7 +26,6 @@ type NavigationItem = {
     target: string,
     icon: ReactElement,
 }
-
 
 const navigationItems: NavigationItem[] = [
     { name: "Dashboard", target: "/", icon: <Dashboard /> },
@@ -119,7 +118,7 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
                         {props.title}
                     </Typography>
                     {props.actionItems && props.actionItems.map((item) =>
-                        <Button startIcon={item.icon} onClick={() => { item.onClick() }} color='inherit'>
+                        <Button startIcon={item.icon} key={item.title} onClick={() => { item.onClick() }} color='inherit'>
                             {item.title}
                         </Button>
                     )}

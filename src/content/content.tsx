@@ -66,7 +66,7 @@ const content: { [key: string]: ContentConfiguration } = {
         apiId: "doctor",
         entityFields: [
             { name: "ID", key: "id", type: "number" },
-            { name: "Location", key: "locations", type: "ref:locations:title", multiple: true, editable: true },
+            { name: "Location", key: "location", type: "ref:locations:title", editable: true },
             { name: "Name", key: "name", type: "string", editable: true },
             { name: "Phone Number", key: "phoneNumber", type: "string", editable: true },
             { name: "Room", key: "room", type: "string", editable: true },
@@ -74,7 +74,7 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Specialty", key: "specialty", type: "string", editable: true },
             { name: "Picture", key: "picture", type: "image", editable: true },
         ],
-        hideFromPreview: ["id", "picture"],
+        hideFromPreview: ["id", "location", "picture"],
         icon: <MedicalServices />
     },
     "locations": {
