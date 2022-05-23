@@ -2,7 +2,7 @@ import { Done, Restore } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import { Alert, Backdrop, Button, CircularProgress, Stack, TextField, Toolbar, Typography } from '@mui/material';
 import { Formik } from 'formik';
-import { ChangeEventHandler, ReactElement, useEffect, useState } from 'react';
+import { ChangeEventHandler, ReactElement, useEffect, useState, useMemo } from 'react';
 import content, { ContentConfiguration, EntityField } from '../../content/content';
 import { contentService, wrapInData } from '../../services/content.service';
 import { NamedFile } from '../../services/generic_crud.service';
@@ -73,20 +73,13 @@ function getFormComponent(values: any, field: EntityField, handleChange: ChangeE
         />;
     }
     if (field.type.match('ref:.*')) {
-        const refProperties = field.type.split(/ref:/)[1];
-        const refKey = refProperties.split(":")[0];
-        if (refProperties.split(":")[1] == null) {
-            return <Alert severity='error' sx={{ my: 1 }}>Missing reference fields for: {field.key}!</Alert>
-        }
-        const refFields = refProperties.split(":")[1].split(",");
         return <RefSelectorField
             key={field.key}
             name={field.key}
             helperText={""}
             multiple={field.multiple}
             label={field.name}
-            refKey={refKey}
-            refFields={refFields}
+            fieldType={field.type}
         />
     }
     return <Alert severity='error' sx={{ my: 1 }}>Invalid Type: {field.type}!</Alert>
@@ -141,7 +134,12 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     const [error, setError] = useState(null as null | string);
     const [success, setSuccess] = useState(null as null | string);
 
+    console.log("Content Edit Manager rendered!");
+
+
     useEffect(() => {
+        console.log("Fetch Object called!");
+
         if (objectId !== -1) {
             contentService.use(props.entityId).getSingle(objectId).then((response) => {
                 setObj(response);

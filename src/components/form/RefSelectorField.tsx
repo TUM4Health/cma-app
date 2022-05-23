@@ -1,7 +1,7 @@
 import { Alert, Autocomplete, TextField } from '@mui/material';
 import Box from '@mui/material/Box';
 import { useField } from "formik";
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import content from '../../content/content';
 import { contentService } from '../../services/content.service';
 
@@ -9,8 +9,7 @@ export type Props = {
     label: string,
     helperText: string,
     name: string,
-    refKey: string,
-    refFields: string[],
+    fieldType: string,
     multiple?: boolean,
 };
 
@@ -26,11 +25,16 @@ export function getItemAsValue(items: any[], refFields: string[]) {
     } as AutocompleteOption));
 }
 
-export default function RefSelectorField({ label, helperText, name, refKey, refFields, multiple, ...props }: Props) {
+export default function RefSelectorField({ label, helperText, name, fieldType, multiple, ...props }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [field, meta, { setValue, setTouched }] = useField(name);
-    const refContent = content[refKey];
     const [options, setOptions] = useState([] as AutocompleteOption[]);
+    const [refKey, refFields, refContent] = useMemo(() => {
+        const refProperties = fieldType.split(/ref:/)[1];
+        const refKey = refProperties.split(":")[0];
+        const refFields = refProperties.split(":")[1].split(",");
+        return [refProperties.split(":")[0], refFields, content[refKey]];
+    }, [fieldType]);
 
     useEffect(() => {
         contentService.use(refKey).getAll().then((response) => {
