@@ -92,6 +92,8 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
                 id: item.id,
                 ...item.attributes,
             })));
+        }).catch((error) => {
+            setContent([]); // TODO: add error handling
         });
     }, [props]);
 
