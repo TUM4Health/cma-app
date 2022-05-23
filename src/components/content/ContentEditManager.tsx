@@ -1,6 +1,6 @@
 import { Done, Restore } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { Backdrop, Button, CircularProgress, Stack, TextField, Toolbar, Typography } from '@mui/material';
+import { Alert, Backdrop, Button, CircularProgress, Stack, TextField, Toolbar, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import { ChangeEventHandler, ReactElement, useEffect, useState } from 'react';
 import content, { EntityField } from '../../content/content';
@@ -11,6 +11,7 @@ import FormDateField from '../form/FormDateField';
 import { getImageUrl, uploadFiles, getImageUrls, deleteFile } from '../../services/upload.service';
 import { NamedFile } from '../../services/generic_crud.service';
 import { ContentConfiguration } from '../../content/content';
+import { getEmptyValueByType } from '../../utils/typeUtil';
 
 interface Props {
     entityId: string,
@@ -22,6 +23,7 @@ function getFormComponent(values: any, field: EntityField, handleChange: ChangeE
         return <TextField
             sx={{ my: 1 }}
             disabled={!field.editable}
+            key={field.key}
             fullWidth
             label={field.name} variant="outlined"
             type="text"
@@ -36,6 +38,7 @@ function getFormComponent(values: any, field: EntityField, handleChange: ChangeE
         return <TextField
             sx={{ my: 1 }}
             disabled={!field.editable}
+            key={field.key}
             fullWidth
             label={field.name} variant="outlined"
             type="number"
@@ -49,6 +52,7 @@ function getFormComponent(values: any, field: EntityField, handleChange: ChangeE
     if (field.type === "richtext") {
         return <RichEditor
             name={field.key}
+            key={field.key}
             value={values != null ? values[field.key] : ""}
             placeholder={field.name} />
     }
@@ -95,19 +99,40 @@ function getImageIds(obj: any, keys: string[], content: ContentConfiguration) {
 }
 
 function isArrayOfStrings(obj: any[]) {
+    if (typeof obj != "object" || !Array.isArray(obj))
+        return false;
     return !obj.find((o) => typeof o != "string");
+}
+
+function getEmptyObject(entityFields: EntityField[]) {
+    var ret: { [key: string]: any } = {};
+    for (const entityField of entityFields) {
+        if (entityField.multiple) {
+            ret[entityField.key] = getEmptyValueByType(entityField.type);
+        } else {
+            ret[entityField.key] = [];
+        }
+    }
+    return ret;
 }
 
 export default function ContentEditManager(props: React.PropsWithChildren<Props>) {
     const data = content[props.entityId!];
     const [obj, setObj] = useState({} as any);
+    const [objectId, setObjectId] = useState(props.objectId);
     const [initialValues, setInitialValues] = useState({});
+    const [error, setError] = useState(null as null | string);
+    const [success, setSuccess] = useState(null as null | string);
 
     useEffect(() => {
-        contentService.use(props.entityId).getSingle(props.objectId).then((response) => {
-            setObj(response);
-        });
-    }, [props]);
+        if (objectId !== -1) {
+            contentService.use(props.entityId).getSingle(objectId).then((response) => {
+                setObj(response);
+            });
+        } else {
+            setObj(getEmptyObject(data.entityFields));
+        }
+    }, [props, data.entityFields, objectId]);
 
     useEffect(() => {
         const initialValues: { [key: string]: any } = {};
@@ -142,68 +167,81 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             onSubmit={(values, { setSubmitting, setFieldError }) => {
                 const nonFileFields: { [key: string]: any } = {};
                 const namedFiles: NamedFile[] = [];
-                // First group fields into non file and file fields
-                data.entityFields.forEach((field) => {
-                    if (field.type === "image" || field.type === "file") {
-                        // If (not multiple) value is string => value was not set, so do not add to file uploading
-                        // Or (multiple) all values are strings => values were not changed, so do not add to file uploading
-                        if ((typeof (values as any)[field.key] != "string" && !field.multiple)
-                            || (field.multiple && !isArrayOfStrings((values as any)[field.key]))) {
-                            if (!field.multiple) {
-                                namedFiles.push({ file: (values as any)[field.key] as File, name: field.key });
+                try {
+                    // First group fields into non file and file fields
+                    data.entityFields.forEach((field) => {
+                        if (field.type === "image" || field.type === "file") {
+                            // If (not multiple) value is string => value was not set, so do not add to file uploading
+                            // Or (multiple) all values are strings => values were not changed, so do not add to file uploading
+                            if ((typeof (values as any)[field.key] != "string" && !field.multiple)
+                                || (field.multiple && !isArrayOfStrings((values as any)[field.key]))) {
+                                if (!field.multiple) {
+                                    namedFiles.push({ file: (values as any)[field.key] as File, name: field.key });
+                                } else {
+                                    if (((values as any)[field.key] as any[]))
+                                        ((values as any)[field.key] as any[]).forEach(
+                                            (iFile: File) => namedFiles.push({ file: iFile, name: field.key })
+                                        );
+                                }
                             } else {
-                                ((values as any)[field.key] as any[]).forEach(
-                                    (iFile: File) => namedFiles.push({ file: iFile, name: field.key })
-                                );
+                                // To preserve initial images, the ids need to be readded
+                                if (obj.data && obj.data.attributes[field.key].data)
+                                    nonFileFields[field.key] = obj.data.attributes[field.key].data.id;
                             }
                         } else {
-                            // To preserve initial images, the ids need to be readded
-                            if (obj.data.attributes[field.key].data)
-                                nonFileFields[field.key] = obj.data.attributes[field.key].data.id;
+                            if (field.type === "richtext" && typeof (values as any)[field.key] === "function") {
+                                // If richtext, use workaround to retrieve editors value
+                                nonFileFields[field.key] = (values as any)[field.key]();
+                            } else {
+                                nonFileFields[field.key] = (values as any)[field.key];
+                            }
                         }
+                    });
+
+                    // Create or Update?
+                    if (objectId === -1) {
+                        // Create
+                        delete nonFileFields.id; // Remove id as is empty anyway
+                        contentService.use(props.entityId).createWithFiles(nonFileFields, namedFiles)
+                            .then((resp) => {
+                                setSubmitting(false);
+                                var id = resp.data.id;
+                                setObjectId(id);
+                                window.history.replaceState(null, "", window.location.pathname.slice(0, -3) + id)
+                                setSuccess("Entry created!");
+                            }).catch((error) => {
+                                console.error(error);
+                                setSubmitting(false);
+                                setError("An Error has occurred, please try again! (" + error + ")");
+                            });
                     } else {
-                        if (field.type === "richtext") {
-                            // If richtext, use workaround to retrieve editors value
-                            nonFileFields[field.key] = (values as any)[field.key]();
-                        } else {
-                            nonFileFields[field.key] = (values as any)[field.key];
-                        }
+                        // Update
+                        contentService.use(props.entityId).update(wrapInData(nonFileFields), props.objectId)
+                            .then(async (resp) => {
+                                const oldImageIds = getImageIds(obj, namedFiles.map((nm) => nm.name), data);
+                                // Now upload images & delete old
+                                await Promise.all(
+                                    [...namedFiles.map((namedFile) =>
+                                        uploadFiles([namedFile.file],
+                                            data.apiId,
+                                            objectId,
+                                            namedFile.name)
+                                    ),
+                                    ...oldImageIds.map((id) => deleteFile(id))]
+                                )
+                                setSubmitting(false);
+                                setSuccess("Entry updated!");
+                            })
+                            .catch((error) => {
+                                console.error(error);
+                                setSubmitting(false);
+                                setError("An Error has occurred, please try again! (" + error + ")");
+                            });
                     }
-                });
-
-                // Create or Update?
-                if (props.objectId === -1) {
-                    // Create
-                    contentService.use(props.entityId).createWithFiles(nonFileFields, namedFiles)
-                        .then((resp) => {
-                            console.log("Response");
-                            console.log(resp);
-                            setSubmitting(false);
-                            window.location.reload(); // TODO replace with data reload & set to edit instead of create
-                        });
-                } else {
-                    // Update
-                    contentService.use(props.entityId).update(wrapInData(nonFileFields), props.objectId)
-                        .then(async (resp) => {
-                            const oldImageIds = getImageIds(obj, namedFiles.map((nm) => nm.name), data);
-                            // Now upload images & delete old
-                            await Promise.all(
-                                [...namedFiles.map((namedFile) =>
-                                    uploadFiles([namedFile.file],
-                                        data.apiId,
-                                        props.objectId,
-                                        namedFile.name)
-                                ),
-                                ...oldImageIds.map((id) => deleteFile(id))]
-                            )
-                            setSubmitting(false);
-                        })
-                        .catch((error) => {
-                            console.error(error);
-
-                            // TODO show error
-                            setSubmitting(false);
-                        });
+                } catch (error) {
+                    console.error(error);
+                    setSubmitting(false);
+                    setError("An Error has occurred, please try again! (" + error + ")");
                 }
             }}
         >
@@ -221,7 +259,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                     <form onSubmit={handleSubmit}>
                         <Toolbar>
                             <Typography variant="h4" component="h1" sx={{ mb: 2 }} >
-                                {props.objectId === -1 ? "Create" : "Edit"}
+                                {objectId === -1 ? "Create" : "Edit"}
                                 {` ${data.title}`}
                             </Typography>
                             <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: "auto" }}>
@@ -232,6 +270,8 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                             </LoadingButton>
                         </Toolbar>
                         <Stack>
+                            {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+                            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                             {data.entityFields
                                 .filter((field) => field.viewable ?? true)
                                 .map((field) => getFormComponent(values, field, handleChange, handleBlur))

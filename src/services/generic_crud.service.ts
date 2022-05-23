@@ -69,8 +69,6 @@ async function _create(data: any, path: string) {
 
 async function _createWithFiles(data: any, files: NamedFile[], path: string) {
     var headers = authHeader();
-    headers["Content-Type"] = "application/json";
-
     var formData = new FormData();
     for (var file of files) {
         formData.append(`files.${file.name}`, file.file, file.fileName);

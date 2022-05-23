@@ -41,14 +41,7 @@ export default function FileUploadField({ label, helperText, name, multiple }: P
 
     return (
         <Stack direction="row" sx={{ mt: 2 }}>
-            <Box sx={{ p: 1 }}>
-                <ImageList sx={{ width: 300, height: 100 }} cols={3} rowHeight={100} variant="quilted">
-                    {!multiple && getAsImageListItem(imagePreviews[0] || field.value, `${name}-image`)}
-                    {multiple && imagePreviews.length === 0 && field.value
-                        && field.value.map((val: string, i: number) => getAsImageListItem(val || field.value, `${name}-image-${i}`))}
-                    {multiple && imagePreviews.length !== 0 && imagePreviews.map((val: string, i: number) => getAsImageListItem(val || field.value, `${name}-image-${i}`))}
-                </ImageList>
-            </Box>
+
             <Stack sx={{ p: 1, justifyContent: "center" }} >
                 <Button
                     variant='contained'
@@ -92,6 +85,14 @@ export default function FileUploadField({ label, helperText, name, multiple }: P
                     />
                 </Button>
             </Stack>
+            <Box sx={{ p: 1 }}>
+                <ImageList sx={{ width: 300, height: 100 }} cols={3} rowHeight={100} variant="quilted">
+                    {!multiple && (imagePreviews[0] || field.value) && getAsImageListItem(imagePreviews[0] || field.value, `${name}-image`)}
+                    {multiple && imagePreviews.length === 0 && field.value
+                        && field.value.map((val: string, i: number) => getAsImageListItem(val || field.value, `${name}-image-${i}`))}
+                    {multiple && imagePreviews.length !== 0 && imagePreviews.map((val: string, i: number) => getAsImageListItem(val || field.value, `${name}-image-${i}`))}
+                </ImageList>
+            </Box>
         </Stack>
     );
 }

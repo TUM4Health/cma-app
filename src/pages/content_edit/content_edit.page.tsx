@@ -9,7 +9,10 @@ import { Container } from '@mui/material';
 const ContentEditPage: FC<any> = (): ReactElement => {
     let params = useParams();
     const data = content[params.entityId!];
-    const objectId = parseInt(params.id!);
+    var objectId = -1;
+    if (!isNaN(parseInt(params.id!))) {
+        objectId = parseInt(params.id!);
+    }
 
     return (
         <ApplicationShell

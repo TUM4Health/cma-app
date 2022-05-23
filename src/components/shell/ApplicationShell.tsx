@@ -1,6 +1,6 @@
-import { Dashboard, People } from '@mui/icons-material';
+import { Add, Dashboard, People } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { ListSubheader } from '@mui/material';
+import { Button, ListSubheader } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -39,8 +39,15 @@ const contentNavigationItems: NavigationItem[] = Object.keys(content).map((key) 
     icon: content[key].icon
 }))
 
+export interface ActionItem {
+    icon: ReactElement,
+    title: string,
+    onClick: Function
+}
+
 interface Props {
-    title: string
+    title: string,
+    actionItems?: ActionItem[]
 }
 
 export default function ApplicationShell(props: React.PropsWithChildren<Props>) {
@@ -108,9 +115,14 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div">
+                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                         {props.title}
                     </Typography>
+                    {props.actionItems && props.actionItems.map((item) =>
+                        <Button startIcon={item.icon} onClick={() => { item.onClick() }} color='inherit'>
+                            {item.title}
+                        </Button>
+                    )}
                 </Toolbar>
             </AppBar>
             <Box
