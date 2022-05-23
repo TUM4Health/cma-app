@@ -1,10 +1,6 @@
-import { Paper } from '@mui/material';
-import { convertFromHTML, convertToHTML } from 'draft-convert';
-import { Editor, EditorState, RichUtils } from 'draft-js';
-import 'draft-js/dist/Draft.css';
+import { Editor } from '@tinymce/tinymce-react';
 import { useField } from 'formik';
-import { FC, ReactElement, useEffect, useState } from 'react';
-
+import { FC, ReactElement, useRef } from 'react';
 
 export type Props = {
     name: string,
@@ -15,37 +11,17 @@ export type Props = {
 const RichEditor: FC<any> = ({ placeholder, name, value }: Props): ReactElement => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [field, meta, { setValue, setTouched }] = useField(name);
-    const [editorState, setEditorState] = useState(EditorState.createEmpty());
 
-    useEffect(() => {
-        if (typeof value === "string")
-            setEditorState(EditorState.createWithContent(convertFromHTML(value)));
-    }, [value]);
+    const editorRef = useRef(null as any);
 
-    useEffect(() => {
-        const html = convertToHTML(editorState.getCurrentContent());
-        // Workaround to prevent callback loop
-        setValue(() => html);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [editorState]);
-
-    const handleKeyCommand = (command: string, editorState: EditorState) => {
-        const newState = RichUtils.handleKeyCommand(editorState, command);
-        if (newState) {
-            setEditorState(newState);
-            return 'handled';
-        }
-        return 'not-handled';
-    }
-
-    return <Paper sx={{ p: 2 }} variant="outlined">
+    return <>
         <Editor
-            editorState={editorState}
-            placeholder={placeholder}
-            onChange={(state) => setEditorState(state)}
-            handleKeyCommand={handleKeyCommand}
+            tinymceScriptSrc={process.env.PUBLIC_URL + '/tinymce/tinymce.min.js'}
+            onInit={(evt, editor) => editorRef.current = editor}
+            onEditorChange={(value) => { setValue(() => value) }}
+            initialValue={typeof value === "string" ? field.value : null}
         />
-    </Paper>;
+    </>;
 }
 
 
