@@ -1,5 +1,5 @@
 import { Delete, Edit } from '@mui/icons-material';
-import { IconButton, Tooltip } from '@mui/material';
+import { IconButton, Tooltip, Backdrop, CircularProgress } from '@mui/material';
 import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
@@ -30,7 +30,7 @@ const getActions = (id: number, entityId: string) => (
 )
 
 export default function ContentList(props: React.PropsWithChildren<Props>) {
-    const [content, setContent] = useState([]);
+    const [content, setContent] = useState(null as any[] | null);
     const [columns, setColumns] = useState([] as GridColDef[]);
 
     useEffect(() => {
@@ -46,7 +46,7 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
             renderCell: (params: GridValueGetterParams) => getActions(params.row.id, props.entityId)
         });
 
-        setContent([]);
+        setContent(null);
         setColumns(newColumns);
 
         // Then update content
@@ -58,9 +58,18 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
         });
     }, [props]);
 
+    if (columns.length === 0 || content == null) {
+        return <Backdrop
+            open={true}
+            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        >
+            <CircularProgress color="inherit" />
+        </Backdrop>
+    }
+
     return <div style={{ height: 400, width: '100%' }}>
         <DataGrid
-            rows={content}
+            rows={content ?? []}
             columns={columns}
             pageSize={5}
             rowsPerPageOptions={[5]}
