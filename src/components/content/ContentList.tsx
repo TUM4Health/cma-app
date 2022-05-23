@@ -1,10 +1,12 @@
 import { Delete, Edit } from '@mui/icons-material';
-import { IconButton, Tooltip, Backdrop, CircularProgress } from '@mui/material';
-import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
+import { IconButton, Tooltip, Backdrop, CircularProgress, Avatar, Skeleton } from '@mui/material';
+import { DataGrid, GridCellParams, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
 import { contentService } from '../../services/content.service';
 import { EntityField } from '../../content/content';
+import { getImageUrl } from '../../services/upload.service';
+import { log } from 'console';
 
 
 interface Props {
@@ -29,6 +31,18 @@ const getActions = (id: number, entityId: string) => (
     </>
 )
 
+function renderCell(type: string) {
+    return (params: GridCellParams) => {
+        if (type === "image") {
+            if ((params.value as any).data != null) {
+                return <Avatar src={getImageUrl(params.value)} />;
+            } else {
+                return <Skeleton variant="circular" animation={false} width={40} height={40} />;
+            }
+        }
+    };
+}
+
 export default function ContentList(props: React.PropsWithChildren<Props>) {
     const [content, setContent] = useState(null as any[] | null);
     const [columns, setColumns] = useState([] as GridColDef[]);
@@ -37,7 +51,13 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
         // First update columns to new model
         const newColumns: GridColDef[] = (props.entityFields
             .filter((entityField) => !props.hideFromPreview.includes(entityField.key))
-            .map((entityfield) => ({ field: entityfield.key, headerName: entityfield.name, type: entityfield.type, width: 160 })));
+            .map((entityField) => ({
+                field: entityField.key,
+                headerName: entityField.name,
+                type: entityField.type,
+                width: 160,
+                renderCell: ["string", "date", "number"].includes(entityField.type) ? null : renderCell(entityField.type)
+            } as GridColDef)));
 
         newColumns.push({
             field: "actions",
@@ -73,7 +93,7 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
             columns={columns}
             pageSize={5}
             rowsPerPageOptions={[5]}
-            checkboxSelection
+            disableSelectionOnClick
         />
     </div>
 }

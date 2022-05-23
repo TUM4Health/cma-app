@@ -22,10 +22,6 @@ export async function uploadFiles(files: File[], entityId: string, refId: number
         headers: headers,
         body: formData
     };
-    console.log(`Ref: api::${entityId}.${entityId}`);
-    console.log(`RefId: ${refId}`);
-    console.log(`field: ${field}`);
-
     const response = await fetch(`${SERVER_URL}/api/upload`, requestOptions);
     return handleResponse(response);
 }
