@@ -1,6 +1,6 @@
 import { Done, Restore } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { Alert, Backdrop, Box, Button, CircularProgress, Stack, Toolbar, Typography } from '@mui/material';
+import { Alert, Backdrop, Box, Button, CircularProgress, Stack, Toolbar, Tooltip, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import { useEffect, useMemo, useState } from 'react';
 import { createSearchParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -131,24 +131,24 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                 entry.attributes.locale === val
             );
             if (found) {
-                setObjectId(found.id);
-                const pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/") + 1);
-                navigate({
-                    pathname: pathWithoutId + found.id,
-                }, { replace: true });
+                navigateToIdAndDisableLocalization(found.id);
             } else {
                 setupNewLocalization(val);
             }
         } else if (val === referencedLocale) { // Returning back to reference (an already existing) entry
-            setLocalizationConfiguration({});
-            setObjectId(referencedId!);
-            const pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/"));
-            navigate({
-                pathname: `${pathWithoutId}/${referencedId}`,
-            }, { replace: true });
+            navigateToIdAndDisableLocalization(referencedId);
         } else { // Creating new localization
             setupNewLocalization(val);
         }
+    }
+
+    const navigateToIdAndDisableLocalization = (targetId: any) => {
+        setLocalizationConfiguration({});
+        setObjectId(targetId);
+        const pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/") + 1);
+        navigate({
+            pathname: pathWithoutId + targetId,
+        }, { replace: true });
     }
 
     // Setup the form to be in localization mode with the required parameters
@@ -221,15 +221,17 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                                 {` ${data.title}`}
                             </Typography>
                             { /* Check if the object is newly created, if so, do not show localization select */}
-                            <Box sx={{ ml: "auto" }}>
-                                <SimpleSelect
-                                    id='locale'
-                                    label='Locale'
-                                    disabled={objectId === -1 && !isLocalizationMode} // Disable localization chooser if creation entry with default locale
-                                    value={currentLocale}
-                                    onChange={(ev) => onLocaleChanged(ev.target.value)}
-                                    options={contentLocales.map((l) => ({ value: l.key, label: l.label }))} />
-                            </Box>
+                            <Tooltip arrow placement="left" title={!isLocalizationMode && objectId === -1 ? "You need to create an entry with the default locale before you can add other locales" : "Choose the locale to edit"}>
+                                <Box sx={{ ml: "auto" }}>
+                                    <SimpleSelect
+                                        id='locale'
+                                        label='Locale'
+                                        disabled={objectId === -1 && !isLocalizationMode} // Disable localization chooser if creation entry with default locale
+                                        value={currentLocale}
+                                        onChange={(ev) => onLocaleChanged(ev.target.value)}
+                                        options={contentLocales.map((l) => ({ value: l.key, label: l.label }))} />
+                                </Box>
+                            </Tooltip>
                             <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: 2 }}>
                                 Reset
                             </Button>
