@@ -17,7 +17,10 @@ export interface EntityField {
     multiple?: boolean,
     editable?: boolean,
     viewable?: boolean,
+    localizable?: boolean,
 }
+
+export const contentLocales = [{ key: "en", label: "English" }, { key: "de", label: "Deutsch" }];
 
 const content: { [key: string]: ContentConfiguration } = {
     "news-articles": {
@@ -26,7 +29,7 @@ const content: { [key: string]: ContentConfiguration } = {
         apiId: "news-article",
         entityFields: [
             { name: "ID", key: "id", type: "number" },
-            { name: "Headline", key: "headline", type: "string", editable: true },
+            { name: "Headline", key: "headline", type: "string", editable: true, localizable: true },
             { name: "Subheadline", key: "subheadline", type: "string", editable: true },
             { name: "Description", key: "description", type: "string", editable: true },
             { name: "Date", key: "date", type: "date", editable: true },
@@ -56,7 +59,7 @@ const content: { [key: string]: ContentConfiguration } = {
         apiId: "covid",
         entityFields: [
             { name: "ID", key: "id", type: "number" },
-            { name: "Description", key: "description", type: "string", editable: true }
+            { name: "Description", key: "description", type: "string", editable: true, localizable: true }
         ],
         hideFromPreview: ["id"],
         icon: <Coronavirus />

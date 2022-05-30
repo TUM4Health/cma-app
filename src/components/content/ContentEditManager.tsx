@@ -1,117 +1,19 @@
 import { Done, Restore } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { Alert, Backdrop, Button, CircularProgress, Stack, TextField, Toolbar, Typography } from '@mui/material';
+import { Alert, Backdrop, Button, CircularProgress, Stack, Toolbar, Typography } from '@mui/material';
 import { Formik } from 'formik';
-import { ChangeEventHandler, ReactElement, useEffect, useState } from 'react';
-import content, { ContentConfiguration, EntityField } from '../../content/content';
-import { contentService, wrapInData } from '../../services/content.service';
-import { NamedFile } from '../../services/generic_crud.service';
-import { deleteFile, getImageUrl, getImageUrls, uploadFiles } from '../../services/upload.service';
+import { useEffect, useState } from 'react';
+import content, { EntityField } from '../../content/content';
+import { contentService } from '../../services/content.service';
+import { getImageUrl, getImageUrls } from '../../services/upload.service';
 import { getEmptyValueByType } from '../../utils/typeUtil';
-import RichEditor from '../editor/RichEditor';
-import FileUploadField from '../form/FileUploadField';
-import FormDateField from '../form/FormDateField';
-import RefSelectorField, { AutocompleteOption, getItemAsValue } from '../form/RefSelectorField';
+import { getItemAsValue } from '../form/RefSelectorField';
+import getFormComponent from './ContentEditFormComponentUtil';
+import submitContent from './ContentEditSubmitHandler';
 
 interface Props {
     entityId: string,
     objectId: number,
-}
-
-function getFormComponent(values: any, field: EntityField, handleChange: ChangeEventHandler, handleBlur: ChangeEventHandler): ReactElement {
-    if (field.type === "string") {
-        return <TextField
-            sx={{ my: 1 }}
-            disabled={!field.editable}
-            key={field.key}
-            fullWidth
-            label={field.name} variant="outlined"
-            type="text"
-            name={field.key}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            value={values != null ? values[field.key] : ""}
-        >
-        </ TextField>
-    }
-    if (field.type === "number") {
-        return <TextField
-            sx={{ my: 1 }}
-            disabled={!field.editable}
-            key={field.key}
-            fullWidth
-            label={field.name} variant="outlined"
-            type="number"
-            name={field.key}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            value={values != null ? values[field.key] : ""}
-        >
-        </ TextField>
-    }
-    if (field.type === "richtext") {
-        return <RichEditor
-            name={field.key}
-            key={field.key}
-            value={values != null ? values[field.key] : ""}
-            placeholder={field.name} />
-    }
-    if (field.type === "date") {
-        return <FormDateField
-            key={field.key}
-            name={field.key}
-            helperText={""}
-            label={field.name} />;
-    }
-    if (field.type === "image") {
-        return <FileUploadField
-            key={field.key}
-            name={field.key}
-            helperText={""}
-            multiple={field.multiple}
-            label={field.name}
-        />;
-    }
-    if (field.type.match('ref:.*')) {
-        return <RefSelectorField
-            key={field.key}
-            name={field.key}
-            helperText={""}
-            multiple={field.multiple}
-            label={field.name}
-            fieldType={field.type}
-        />
-    }
-    return <Alert severity='error' sx={{ my: 1 }}>Invalid Type: {field.type}!</Alert>
-}
-
-/**
- * This method provides all ids of certain images of an existing entity
- * @param obj the object form what to retrieve the ids
- * @param keys the keys of the images from which to retrieve the ids
- * @param content the content configuration
- * @returns a list of ids of the images
- */
-function getImageIds(obj: any, keys: string[], content: ContentConfiguration) {
-    const ret: number[] = [];
-    content.entityFields.forEach((field) => {
-        if (field.type === "image" && keys.includes(field.key)) {
-            if (obj.data.attributes[field.key].data == null)
-                return;
-            if (field.multiple) {
-                ret.push(...(obj.data.attributes[field.key].data as any[]).reduce((prev, cur) => [...prev, cur.id], []));
-            } else {
-                ret.push(obj.data.attributes[field.key].data.id);
-            }
-        }
-    });
-    return ret;
-}
-
-function isArrayOfStrings(obj: any[]) {
-    if (typeof obj != "object" || !Array.isArray(obj))
-        return false;
-    return !obj.find((o) => typeof o != "string");
 }
 
 function getEmptyObject(entityFields: EntityField[]) {
@@ -134,12 +36,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     const [error, setError] = useState(null as null | string);
     const [success, setSuccess] = useState(null as null | string);
 
-    console.log("Content Edit Manager rendered!");
-
-
     useEffect(() => {
-        console.log("Fetch Object called!");
-
         if (objectId !== -1) {
             contentService.use(props.entityId).getSingle(objectId).then((response) => {
                 setObj(response);
@@ -199,94 +96,20 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             enableReinitialize
             initialValues={initialValues}
             onSubmit={(values: any, { setSubmitting, setFieldError }) => {
-                const nonFileFields: { [key: string]: any } = {};
-                const namedFiles: NamedFile[] = [];
-                try {
-                    // First group fields into non file and file fields
-                    data.entityFields.forEach((field) => {
-                        if (field.type === "image" || field.type === "file") {
-                            // If (not multiple) value is string => value was not set, so do not add to file uploading
-                            // Or (multiple) all values are strings => values were not changed, so do not add to file uploading
-                            if ((typeof values[field.key] != "string" && !field.multiple)
-                                || (field.multiple && !isArrayOfStrings(values[field.key]))) {
-                                if (!field.multiple) {
-                                    namedFiles.push({ file: values[field.key] as File, name: field.key });
-                                } else {
-                                    if ((values[field.key] as any[]))
-                                        (values[field.key] as any[]).forEach(
-                                            (iFile: File) => namedFiles.push({ file: iFile, name: field.key })
-                                        );
-                                }
-                            } else {
-                                // To preserve initial images, the ids need to be readded
-                                if (obj.data && obj.data.attributes[field.key].data)
-                                    nonFileFields[field.key] = obj.data.attributes[field.key].data.id;
-                            }
-                        } else if (field.type === "richtext" && typeof values[field.key] === "function") {
-                            // If richtext, use workaround to retrieve editors value
-                            nonFileFields[field.key] = values[field.key]();
-                        } else if (field.type.match(/ref:/)) {
-                            // If reference, retrieve ids to set references                            
-                            if (field.multiple) {
-                                nonFileFields[field.key] = values[field.key].map((item: AutocompleteOption) => item.id);
-                            } else {
-                                nonFileFields[field.key] = values[field.key].id;
-                            }
-                        } else {
-                            nonFileFields[field.key] = values[field.key];
-                        }
-                    });
+                const entityId = props.entityId;
+                submitContent({
+                    values,
+                    setSubmitting,
+                    setFieldError,
+                    data,
+                    obj,
+                    objectId,
+                    setObjectId,
+                    entityId,
+                    setError,
+                    setSuccess
+                });
 
-                    // Create or Update?
-                    if (objectId === -1) {
-                        // Create
-                        delete nonFileFields.id; // Remove id as is empty anyway
-                        contentService.use(props.entityId).createWithFiles(nonFileFields, namedFiles)
-                            .then((resp) => {
-                                setSubmitting(false);
-                                var id = resp.data.id;
-                                setObjectId(id);
-                                window.history.replaceState(null, "", window.location.pathname.slice(0, -3) + id)
-                                setError(null);
-                                setSuccess("Entry created!");
-                            }).catch((error) => {
-                                console.error(error);
-                                setSubmitting(false);
-                                setSuccess(null);
-                                setError("An Error has occurred, please try again! (" + error + ")");
-                            });
-                    } else {
-                        // Update
-                        contentService.use(props.entityId).update(wrapInData(nonFileFields), objectId)
-                            .then(async (resp) => {
-                                const oldImageIds = getImageIds(obj, namedFiles.map((nm) => nm.name), data);
-                                // Now upload images & delete old
-                                await Promise.all(
-                                    [...namedFiles.map((namedFile) =>
-                                        uploadFiles([namedFile.file],
-                                            data.apiId,
-                                            objectId,
-                                            namedFile.name)
-                                    ),
-                                    ...oldImageIds.map((id) => deleteFile(id))]
-                                )
-                                setSubmitting(false);
-                                setError(null);
-                                setSuccess("Entry updated!");
-                            })
-                            .catch((error) => {
-                                console.error(error);
-                                setSubmitting(false);
-                                setSuccess(null);
-                                setError("An Error has occurred, please try again! (" + error + ")");
-                            });
-                    }
-                } catch (error) {
-                    console.error(error);
-                    setSubmitting(false);
-                    setSuccess(null);
-                    setError("An Error has occurred, please try again! (" + error + ")");
-                }
             }}
         >
             {({
