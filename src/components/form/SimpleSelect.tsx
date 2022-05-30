@@ -1,11 +1,12 @@
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 
 export interface Props {
-    key: string,
+    id: string,
     label: string,
     value: any,
     onChange: ((event: SelectChangeEvent<any>, child: React.ReactNode) => void),
-    options: DropDownOption[]
+    options: DropDownOption[],
+    disabled: boolean,
 }
 
 export interface DropDownOption {
@@ -13,13 +14,14 @@ export interface DropDownOption {
     value: any,
 }
 
-export default function SimpleSelect({ key, label, value, onChange, options }: Props) {
+export default function SimpleSelect({ id, label, value, onChange, options, disabled }: React.PropsWithChildren<Props>) {
 
     return <FormControl fullWidth>
-        <InputLabel id={`${key}-label`}>{label}</InputLabel>
+        <InputLabel id={`${id}-label`}>{label}</InputLabel>
         <Select
-            labelId={`${key}-label`}
-            id={key}
+            disabled={disabled}
+            labelId={`${id}-label`}
+            id={id}
             value={value}
             label={label}
             onChange={onChange}

@@ -1,9 +1,10 @@
-import { Done, LocalLaundryService, Restore } from '@mui/icons-material';
+import { Done, Restore } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import { Alert, Backdrop, Box, Button, CircularProgress, Stack, Toolbar, Typography } from '@mui/material';
 import { Formik } from 'formik';
-import { useEffect, useState } from 'react';
-import content, { EntityField } from '../../content/content';
+import { useEffect, useMemo, useState } from 'react';
+import { createSearchParams, useNavigate, useSearchParams } from 'react-router-dom';
+import content, { contentLocales, defaultLocale, EntityField } from '../../content/content';
 import { contentService } from '../../services/content.service';
 import { getImageUrl, getImageUrls } from '../../services/upload.service';
 import { getEmptyValueByType } from '../../utils/typeUtil';
@@ -11,7 +12,6 @@ import { getItemAsValue } from '../form/RefSelectorField';
 import SimpleSelect from '../form/SimpleSelect';
 import getFormComponent from './ContentEditFormComponentUtil';
 import submitContent from './ContentEditSubmitHandler';
-import { contentLocales, defaultLocale } from '../../content/content';
 
 interface Props {
     entityId: string,
@@ -33,11 +33,37 @@ function getEmptyObject(entityFields: EntityField[]) {
 export default function ContentEditManager(props: React.PropsWithChildren<Props>) {
     const data = content[props.entityId!];
     const [obj, setObj] = useState({} as any);
+    // If currently a localization of an entry is edited
+    const [localizationConfiguration, setLocalizationConfiguration] = useState({});
     const [objectId, setObjectId] = useState(props.objectId);
     const [initialValues, setInitialValues] = useState({});
     const [error, setError] = useState(null as null | string);
     const [success, setSuccess] = useState(null as null | string);
+    const [searchParams] = useSearchParams();
+    let navigate = useNavigate();
 
+    const referencedId = searchParams.get("ref");
+    const referencedLocale = searchParams.get("refLocale");
+    const requestedLocale = searchParams.get("locale");
+
+    const isLocalizationMode = useMemo(() => Object.keys(localizationConfiguration).length !== 0, [localizationConfiguration]);
+
+    const currentLocale = useMemo(() => {
+        var currentLocale = obj.data && obj.data.attributes ? obj.data.attributes.locale : ({ value: defaultLocale.key, label: defaultLocale.label });
+        if (isLocalizationMode) {
+            currentLocale = requestedLocale;
+        }
+        return currentLocale;
+    }, [isLocalizationMode, obj.data, requestedLocale]);
+
+    // If page was reload, we need to reconfigure the localizationConfiguration
+    useEffect(() => {
+        if (!isLocalizationMode && referencedId != null && referencedLocale != null && requestedLocale != null) {
+            setLocalizationConfiguration({ id: referencedId, locale: requestedLocale });
+        }
+    }, [isLocalizationMode, referencedId, referencedLocale, requestedLocale]);
+
+    // Fetch possible existing object
     useEffect(() => {
         if (objectId !== -1) {
             contentService.use(props.entityId).getSingle(objectId).then((response) => {
@@ -48,6 +74,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         }
     }, [props, data.entityFields, objectId]);
 
+    // Prefill form and setup formik with initalValues if data is retrieved
     useEffect(() => {
         const initialValues: { [key: string]: any } = {};
         const combinedData = obj.data ? { "id": obj.data.id, ...obj.data.attributes } : {};
@@ -84,6 +111,57 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         setInitialValues(initialValues);
     }, [data.entityFields, obj]);
 
+
+    // Go through existing localizations in the current fetched object and navigate accordingly
+    const onLocaleChanged = (val: string) => {
+        // First check if the loaded object contains a localized entry for the selected localization
+        if (obj.data && obj.data.attributes.localizations && obj.data.attributes.localizations.data) {
+            const found = obj.data.attributes.localizations.data.find((entry: any) =>
+                entry.attributes.locale === val
+            );
+            if (found) {
+                setObjectId(found.id);
+                const pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/") + 1);
+                navigate({
+                    pathname: pathWithoutId + found.id,
+                }, { replace: true });
+            } else {
+                setupNewLocalization(val);
+            }
+        } else if (val === referencedLocale) { // Returning back to reference (an already existing) entry
+            setLocalizationConfiguration({});
+            setObjectId(parseInt(referencedId!));
+            const pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/"));
+            navigate({
+                pathname: `${pathWithoutId}/${referencedId}`,
+            }, { replace: true });
+        } else { // Creating new localization
+            setupNewLocalization(val);
+        }
+    }
+
+    // Setup the form to be in localization mode with the required parameters
+    const setupNewLocalization = (locale: string) => {
+        // To be able to also switch from a new locale to another new locale, we might need to forward the original referenced existing entry
+        const originReferenceId = isLocalizationMode ? referencedId : obj.data.id;
+        const originReferenceLocale = isLocalizationMode ? referencedLocale : obj.data.attributes.locale;
+        // TODO: show warning that data is lost (?)
+        setLocalizationConfiguration({ id: originReferenceId, locale: locale });
+        setObjectId(-1); // Reset objectId        
+        // Create empty object with localizable field (for pushing later)
+        const emptyObj = getEmptyObject(data.entityFields.filter((field) => field.localizable));
+        emptyObj.locale = locale;
+        setObj(emptyObj); // Set empty object with configured locale
+        // Retrieve path without id
+        const pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/"));
+        // Replace window url, to allow reloads
+        navigate({
+            pathname: `${pathWithoutId}/new`,
+            search: "?" + createSearchParams({ ref: originReferenceId, refLocale: originReferenceLocale, locale: locale }).toString()
+        }, { replace: true });
+    }
+
+    // If nothing was loaded yet, show loading overlay
     if (Object.keys(obj).length === 0 || Object.keys(initialValues).length === 0) {
         return <Backdrop
             open={true}
@@ -92,32 +170,6 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             <CircularProgress color="inherit" />
         </Backdrop>
     }
-
-    const onLocaleChanged = (val: string) => {
-        console.log("Locale changed to " + val);
-
-        // First check if the loaded object contains a localized entry for the selected localization
-        if (obj.data.attributes.localizations && obj.data.attributes.localizations.data) {
-            console.log("Searching existing localized entry...");
-            console.log(obj.data.attributes.localizations.data);
-
-            const found = obj.data.attributes.localizations.data.find((entry: any) =>
-                entry.attributes.locale === val
-            );
-            console.log("Found!");
-            console.log(found);
-
-
-            if (found) {
-                setObjectId(found.id);
-                var pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/") + 1);
-                window.history.replaceState(null, "", pathWithoutId + found.id);
-            }
-        }
-    }
-
-    console.log(obj);
-
 
     return <>
         <Formik
@@ -153,18 +205,19 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                     <form onSubmit={handleSubmit}>
                         <Toolbar>
                             <Typography variant="h4" component="h1" sx={{ mb: 2 }} >
-                                {objectId === -1 ? "Create" : "Edit"}
+                                {objectId === -1 ? ("Create" + (isLocalizationMode ? " localization for " : "")) : "Edit"}
                                 {` ${data.title}`}
                             </Typography>
                             { /* Check if the object is newly created, if so, do not show localization select */}
-                            {objectId !== -1 && <Box sx={{ ml: "auto" }}>
+                            <Box sx={{ ml: "auto" }}>
                                 <SimpleSelect
-                                    key='locale'
+                                    id='locale'
                                     label='Locale'
-                                    value={obj.data.attributes ? obj.data.attributes.locale : ({ value: defaultLocale.key, label: defaultLocale.label })}
+                                    disabled={objectId === -1 && !isLocalizationMode} // Disable localization chooser if creation entry with default locale
+                                    value={currentLocale}
                                     onChange={(ev) => onLocaleChanged(ev.target.value)}
                                     options={contentLocales.map((l) => ({ value: l.key, label: l.label }))} />
-                            </Box>}
+                            </Box>
                             <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: 2 }}>
                                 Reset
                             </Button>
