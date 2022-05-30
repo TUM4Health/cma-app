@@ -54,7 +54,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     const isLocalizationMode = useMemo(() => Object.keys(localizationConfiguration).length !== 0, [localizationConfiguration]);
 
     const currentLocale = useMemo(() => {
-        var currentLocale = obj.data && obj.data.attributes ? obj.data.attributes.locale : defaultLocale.key;
+        var currentLocale = (obj.data && obj.data.attributes && obj.data.attributes.locale) ? obj.data.attributes.locale : defaultLocale.key;
         if (isLocalizationMode) {
             currentLocale = requestedLocale;
         }
@@ -155,7 +155,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     const setupNewLocalization = (locale: string) => {
         // To be able to also switch from a new locale to another new locale, we might need to forward the original referenced existing entry
         const originReferenceId = isLocalizationMode ? referencedId : obj.data.id;
-        const originReferenceLocale = isLocalizationMode ? referencedLocale : obj.data.attributes.locale;
+        const originReferenceLocale = isLocalizationMode ? referencedLocale : obj.data.attributes.locale ?? defaultLocale.key;
         // TODO: show warning that data is lost (?)
         setLocalizationConfiguration({ id: originReferenceId, locale: locale });
         setObjectId(-1); // Reset objectId        
