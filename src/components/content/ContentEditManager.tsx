@@ -12,6 +12,7 @@ import { getItemAsValue } from '../form/RefSelectorField';
 import SimpleSelect from '../form/SimpleSelect';
 import getFormComponent from './ContentEditFormComponentUtil';
 import submitContent from './ContentEditSubmitHandler';
+import ApproveDialog from '../util/ApproveDialog';
 
 interface Props {
     entityId: string,
@@ -45,6 +46,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     const [error, setError] = useState(null as null | string);
     const [success, setSuccess] = useState(null as null | string);
     const [searchParams] = useSearchParams();
+    const [approvableAction, setApprovableAction] = useState(null as { onApprove: Function } | null);
     let navigate = useNavigate();
 
     const referencedId = parseInt(searchParams.get("ref") ?? "") || null;
@@ -125,21 +127,25 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
 
     // Go through existing localizations in the current fetched object and navigate accordingly
     const onLocaleChanged = (val: string) => {
-        // First check if the loaded object contains a localized entry for the selected localization
-        if (obj.data && obj.data.attributes.localizations && obj.data.attributes.localizations.data) {
-            const found = obj.data.attributes.localizations.data.find((entry: any) =>
-                entry.attributes.locale === val
-            );
-            if (found) {
-                navigateToIdAndDisableLocalization(found.id);
-            } else {
-                setupNewLocalization(val);
+        setApprovableAction({
+            onApprove: () => {
+                // First check if the loaded object contains a localized entry for the selected localization
+                if (obj.data && obj.data.attributes.localizations && obj.data.attributes.localizations.data) {
+                    const found = obj.data.attributes.localizations.data.find((entry: any) =>
+                        entry.attributes.locale === val
+                    );
+                    if (found) {
+                        navigateToIdAndDisableLocalization(found.id);
+                    } else {
+                        setupNewLocalization(val);
+                    }
+                } else if (val === referencedLocale) { // Returning back to reference (an already existing) entry
+                    navigateToIdAndDisableLocalization(referencedId);
+                } else { // Creating new localization
+                    setupNewLocalization(val);
+                }
             }
-        } else if (val === referencedLocale) { // Returning back to reference (an already existing) entry
-            navigateToIdAndDisableLocalization(referencedId);
-        } else { // Creating new localization
-            setupNewLocalization(val);
-        }
+        });
     }
 
     const navigateToIdAndDisableLocalization = (targetId: any) => {
@@ -183,6 +189,18 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     }
 
     return <>
+        <ApproveDialog
+            key="discard-changes"
+            title={`Discard possible changes?`}
+            description={
+                `This action can not be reversed!`
+            }
+            approveTitle="Discard"
+            cancelTitle='Cancel'
+            handleApprove={() => { if (approvableAction) { approvableAction.onApprove(); setApprovableAction(null); } }}
+            handleCancel={() => setApprovableAction(null)}
+            open={approvableAction != null}
+        />
         <Formik
             enableReinitialize
             initialValues={initialValues}

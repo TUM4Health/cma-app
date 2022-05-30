@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { EntityField } from '../../content/content';
 import { contentService } from '../../services/content.service';
 import { getImageUrl } from '../../services/upload.service';
-import ApproveDialog from '../util/ApproveDeleteDialog';
+import ApproveDialog from '../util/ApproveDialog';
 
 
 interface Props {
