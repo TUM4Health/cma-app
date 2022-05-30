@@ -1,6 +1,6 @@
-import { Done, Restore } from '@mui/icons-material';
+import { Done, LocalLaundryService, Restore } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { Alert, Backdrop, Button, CircularProgress, Stack, Toolbar, Typography } from '@mui/material';
+import { Alert, Backdrop, Box, Button, CircularProgress, Stack, Toolbar, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import { useEffect, useState } from 'react';
 import content, { EntityField } from '../../content/content';
@@ -8,8 +8,10 @@ import { contentService } from '../../services/content.service';
 import { getImageUrl, getImageUrls } from '../../services/upload.service';
 import { getEmptyValueByType } from '../../utils/typeUtil';
 import { getItemAsValue } from '../form/RefSelectorField';
+import SimpleSelect from '../form/SimpleSelect';
 import getFormComponent from './ContentEditFormComponentUtil';
 import submitContent from './ContentEditSubmitHandler';
+import { contentLocales, defaultLocale } from '../../content/content';
 
 interface Props {
     entityId: string,
@@ -91,6 +93,32 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         </Backdrop>
     }
 
+    const onLocaleChanged = (val: string) => {
+        console.log("Locale changed to " + val);
+
+        // First check if the loaded object contains a localized entry for the selected localization
+        if (obj.data.attributes.localizations && obj.data.attributes.localizations.data) {
+            console.log("Searching existing localized entry...");
+            console.log(obj.data.attributes.localizations.data);
+
+            const found = obj.data.attributes.localizations.data.find((entry: any) =>
+                entry.attributes.locale === val
+            );
+            console.log("Found!");
+            console.log(found);
+
+
+            if (found) {
+                setObjectId(found.id);
+                var pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/") + 1);
+                window.history.replaceState(null, "", pathWithoutId + found.id);
+            }
+        }
+    }
+
+    console.log(obj);
+
+
     return <>
         <Formik
             enableReinitialize
@@ -128,7 +156,16 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                                 {objectId === -1 ? "Create" : "Edit"}
                                 {` ${data.title}`}
                             </Typography>
-                            <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: "auto" }}>
+                            { /* Check if the object is newly created, if so, do not show localization select */}
+                            {objectId !== -1 && <Box sx={{ ml: "auto" }}>
+                                <SimpleSelect
+                                    key='locale'
+                                    label='Locale'
+                                    value={obj.data.attributes ? obj.data.attributes.locale : ({ value: defaultLocale.key, label: defaultLocale.label })}
+                                    onChange={(ev) => onLocaleChanged(ev.target.value)}
+                                    options={contentLocales.map((l) => ({ value: l.key, label: l.label }))} />
+                            </Box>}
+                            <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: 2 }}>
                                 Reset
                             </Button>
                             <LoadingButton loading={isSubmitting} variant="contained" type="submit" color="success" startIcon={<Done />} sx={{ ml: 2 }}>

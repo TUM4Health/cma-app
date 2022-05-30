@@ -20,7 +20,8 @@ export interface EntityField {
     localizable?: boolean,
 }
 
-export const contentLocales = [{ key: "en", label: "English" }, { key: "de", label: "Deutsch" }];
+export const defaultLocale = { key: "en", label: "English", };
+export const contentLocales = [defaultLocale, { key: "de", label: "Deutsch" }];
 
 const content: { [key: string]: ContentConfiguration } = {
     "news-articles": {
@@ -28,7 +29,7 @@ const content: { [key: string]: ContentConfiguration } = {
         pluralTitle: "Articles",
         apiId: "news-article",
         entityFields: [
-            { name: "ID", key: "id", type: "number" },
+            { name: "ID", key: "id", type: "number", viewable: false },
             { name: "Headline", key: "headline", type: "string", editable: true, localizable: true },
             { name: "Subheadline", key: "subheadline", type: "string", editable: true },
             { name: "Description", key: "description", type: "string", editable: true },
@@ -45,7 +46,7 @@ const content: { [key: string]: ContentConfiguration } = {
         title: "Mental Healthcare",
         apiId: "mental-healthcare",
         entityFields: [
-            { name: "ID", key: "id", type: "number" },
+            { name: "ID", key: "id", type: "number", viewable: false },
             { name: "Headline", key: "headline", type: "string", editable: true },
             { name: "Subhead", key: "subhead", type: "string", editable: true },
             { name: "Description", key: "description", type: "string", editable: true },
@@ -58,7 +59,7 @@ const content: { [key: string]: ContentConfiguration } = {
         title: "Covid",
         apiId: "covid",
         entityFields: [
-            { name: "ID", key: "id", type: "number" },
+            { name: "ID", key: "id", type: "number", viewable: false },
             { name: "Description", key: "description", type: "string", editable: true, localizable: true }
         ],
         hideFromPreview: ["id"],
@@ -68,7 +69,7 @@ const content: { [key: string]: ContentConfiguration } = {
         title: "Doctor",
         apiId: "doctor",
         entityFields: [
-            { name: "ID", key: "id", type: "number" },
+            { name: "ID", key: "id", type: "number", viewable: false },
             { name: "Location", key: "location", type: "ref:locations:title", editable: true },
             { name: "Name", key: "name", type: "string", editable: true },
             { name: "Phone Number", key: "phoneNumber", type: "string", editable: true },
@@ -84,7 +85,7 @@ const content: { [key: string]: ContentConfiguration } = {
         title: "Location",
         apiId: "location",
         entityFields: [
-            { name: "ID", key: "id", type: "number" },
+            { name: "ID", key: "id", type: "number", viewable: false },
             { name: "Title", key: "title", type: "string", editable: true },
             { name: "Description", key: "description", type: "string", editable: true },
             { name: "Icon", key: "icon", type: "image", editable: true },
@@ -97,7 +98,7 @@ const content: { [key: string]: ContentConfiguration } = {
         title: "Offering",
         apiId: "offerings",
         entityFields: [
-            { name: "ID", key: "id", type: "number", editable: true },
+            { name: "ID", key: "id", type: "number", viewable: false, editable: true },
             { name: "Type", key: "type", type: "string", editable: true },
             { name: "Description", key: "description", type: "string", editable: true },
             { name: "Offering Type", key: "offeringType", type: "enum", editable: true },
