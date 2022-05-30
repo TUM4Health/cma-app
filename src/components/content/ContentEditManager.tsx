@@ -18,10 +18,15 @@ interface Props {
     objectId: number,
 }
 
+export interface LocalizationConfiguration {
+    id?: number,
+    locale?: string
+}
+
 function getEmptyObject(entityFields: EntityField[]) {
     var ret: { [key: string]: any } = {};
     for (const entityField of entityFields) {
-        if (entityField.multiple) {
+        if (!entityField.multiple) {
             ret[entityField.key] = getEmptyValueByType(entityField.type);
         } else {
             ret[entityField.key] = [];
@@ -34,7 +39,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     const data = content[props.entityId!];
     const [obj, setObj] = useState({} as any);
     // If currently a localization of an entry is edited
-    const [localizationConfiguration, setLocalizationConfiguration] = useState({});
+    const [localizationConfiguration, setLocalizationConfiguration] = useState({} as LocalizationConfiguration);
     const [objectId, setObjectId] = useState(props.objectId);
     const [initialValues, setInitialValues] = useState({});
     const [error, setError] = useState(null as null | string);
@@ -42,14 +47,14 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     const [searchParams] = useSearchParams();
     let navigate = useNavigate();
 
-    const referencedId = searchParams.get("ref");
+    const referencedId = parseInt(searchParams.get("ref") ?? "") || null;
     const referencedLocale = searchParams.get("refLocale");
     const requestedLocale = searchParams.get("locale");
 
     const isLocalizationMode = useMemo(() => Object.keys(localizationConfiguration).length !== 0, [localizationConfiguration]);
 
     const currentLocale = useMemo(() => {
-        var currentLocale = obj.data && obj.data.attributes ? obj.data.attributes.locale : ({ value: defaultLocale.key, label: defaultLocale.label });
+        var currentLocale = obj.data && obj.data.attributes ? obj.data.attributes.locale : defaultLocale.key;
         if (isLocalizationMode) {
             currentLocale = requestedLocale;
         }
@@ -60,6 +65,8 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     useEffect(() => {
         if (!isLocalizationMode && referencedId != null && referencedLocale != null && requestedLocale != null) {
             setLocalizationConfiguration({ id: referencedId, locale: requestedLocale });
+        } else if (referencedId == null && referencedLocale == null && referencedLocale == null) {
+            setLocalizationConfiguration({});
         }
     }, [isLocalizationMode, referencedId, referencedLocale, requestedLocale]);
 
@@ -70,9 +77,13 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                 setObj(response);
             });
         } else {
-            setObj(getEmptyObject(data.entityFields));
+            var newObj = getEmptyObject(data.entityFields);
+            if (isLocalizationMode) {
+                newObj.locale = requestedLocale;
+            }
+            setObj(newObj);
         }
-    }, [props, data.entityFields, objectId]);
+    }, [props, data.entityFields, objectId, isLocalizationMode, requestedLocale]);
 
     // Prefill form and setup formik with initalValues if data is retrieved
     useEffect(() => {
@@ -130,7 +141,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             }
         } else if (val === referencedLocale) { // Returning back to reference (an already existing) entry
             setLocalizationConfiguration({});
-            setObjectId(parseInt(referencedId!));
+            setObjectId(referencedId!);
             const pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/"));
             navigate({
                 pathname: `${pathWithoutId}/${referencedId}`,
@@ -187,7 +198,8 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                     setObjectId,
                     entityId,
                     setError,
-                    setSuccess
+                    setSuccess,
+                    localizationConfiguration
                 });
 
             }}
@@ -230,6 +242,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                             {data.entityFields
                                 .filter((field) => field.viewable ?? true)
+                                .filter((field) => isLocalizationMode ? field.localizable : true)
                                 .map((field) => getFormComponent(values, field, handleChange, handleBlur))
                             }
                         </Stack>

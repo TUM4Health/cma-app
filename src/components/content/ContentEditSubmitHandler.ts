@@ -3,27 +3,13 @@ import { contentService, wrapInData } from '../../services/content.service';
 import { NamedFile } from '../../services/generic_crud.service';
 import { deleteFile, uploadFiles } from '../../services/upload.service';
 import { AutocompleteOption } from '../form/RefSelectorField';
-
-export interface Props {
-    values: any,
-    setSubmitting: Function,
-    setFieldError: Function,
-    data: ContentConfiguration,
-    obj: any,
-    objectId: number,
-    setObjectId: Function,
-    entityId: string,
-    setError: Function,
-    setSuccess: Function,
-}
-
+import { LocalizationConfiguration } from './ContentEditManager';
 
 function isArrayOfStrings(obj: any[]) {
     if (typeof obj != "object" || !Array.isArray(obj))
         return false;
     return !obj.find((o) => typeof o != "string");
 }
-
 
 /**
  * This method provides all ids of certain images of an existing entity
@@ -49,6 +35,19 @@ function getImageIds(obj: any, keys: string[], content: ContentConfiguration) {
 }
 
 
+export interface Props {
+    values: any,
+    setSubmitting: Function,
+    setFieldError: Function,
+    data: ContentConfiguration,
+    obj: any,
+    objectId: number,
+    setObjectId: Function,
+    entityId: string,
+    setError: Function,
+    setSuccess: Function,
+    localizationConfiguration: LocalizationConfiguration
+}
 
 export default function submitContent({ values,
     setSubmitting,
@@ -59,7 +58,8 @@ export default function submitContent({ values,
     setObjectId,
     entityId,
     setError,
-    setSuccess }: Props) {
+    setSuccess,
+    localizationConfiguration }: Props) {
     const nonFileFields: { [key: string]: any } = {};
     const namedFiles: NamedFile[] = [];
     try {
@@ -98,14 +98,19 @@ export default function submitContent({ values,
             }
         });
 
-        // Create or Update?
-        if (objectId === -1) {
-            // Create
+        const isLocalizationMode = Object.keys(localizationConfiguration).length !== 0;
+        if (objectId === -1) { // Create
+            var service = contentService.use(entityId);
+            // Creating localized entry
+            if (isLocalizationMode && objectId === -1) {
+                service = contentService.useLocalized(entityId, localizationConfiguration.id);
+                nonFileFields["locale"] = localizationConfiguration.locale;
+            }
             delete nonFileFields.id; // Remove id as is empty anyway
-            contentService.use(entityId).createWithFiles(nonFileFields, namedFiles)
+            service.createWithFiles(nonFileFields, namedFiles)
                 .then((resp) => {
                     setSubmitting(false);
-                    var id = resp.data.id;
+                    var id = isLocalizationMode ? resp.id : resp.data.id;
                     setObjectId(id);
                     window.history.replaceState(null, "", window.location.pathname.slice(0, -3) + id)
                     setError(null);
