@@ -3,7 +3,7 @@ import { Avatar, Backdrop, CircularProgress, IconButton, Skeleton, Tooltip } fro
 import { DataGrid, GridCellParams, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
-import { EntityField } from '../../content/content';
+import content, { EntityField } from '../../content/content';
 import { contentService } from '../../services/content.service';
 import { getImageUrl } from '../../services/upload.service';
 import ApproveDialog from '../util/ApproveDialog';
@@ -44,15 +44,17 @@ function renderCell(type: string) {
 }
 
 export default function ContentList(props: React.PropsWithChildren<Props>) {
-    const [content, setContent] = useState(null as any[] | null);
+    const [dataContent, setContent] = useState(null as any[] | null);
     const [columns, setColumns] = useState([] as GridColDef[]);
     const [currentDeleteCandidate, setCurrentDeleteCandidate] = useState(-1);
+
+    const config = content[props.entityId];
 
     const deleteEntity = (id: number) => {
         contentService.use(props.entityId).deleteEntity(id).then(() => {
             // Then update content
             contentService.use(props.entityId).getAll().then((response) => {
-                setContent(response.data.map((item: any) => ({
+                setContent(config.getData(response).map((item: any) => ({
                     id: item.id,
                     ...item.attributes,
                 })));
@@ -88,16 +90,16 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
 
         // Then update content
         contentService.use(props.entityId).getAll().then((response) => {
-            setContent(response.data.map((item: any) => ({
+            setContent(config.getData(response).map((item: any) => ({
                 id: item.id,
-                ...item.attributes,
+                ...config.getAttributes(item),
             })));
         }).catch((error) => {
             setContent([]); // TODO: add error handling
         });
     }, [props]);
 
-    if (columns.length === 0 || content == null) {
+    if (columns.length === 0 || dataContent == null) {
         return <Backdrop
             open={true}
             sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
@@ -121,7 +123,7 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
         />
         <div style={{ height: 400, width: '100%' }}>
             <DataGrid
-                rows={content ?? []}
+                rows={dataContent ?? []}
                 columns={columns}
                 pageSize={5}
                 rowsPerPageOptions={[5]}

@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService } from '@mui/icons-material';
+import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService, People } from '@mui/icons-material';
 
 export interface ContentConfiguration {
     title: string,
@@ -7,8 +7,13 @@ export interface ContentConfiguration {
     entityFields: EntityField[],
     hideFromPreview?: string[],
     icon: ReactElement,
-    apiId: string
+    apiId: string,
+    getData: GetDataFunction,
+    getAttributes: GetAttributesFunction
 }
+
+type GetAttributesFunction = (a: any) => any;
+type GetDataFunction = (a: any) => any[];
 
 export interface EntityField {
     name: string,
@@ -24,6 +29,21 @@ export const defaultLocale = { key: "en", label: "English", };
 export const contentLocales = [defaultLocale, { key: "de", label: "German" }, { key: "fr", label: "French" }];
 
 const content: { [key: string]: ContentConfiguration } = {
+    "users": {
+        title: "Users",
+        apiId: "user",
+        entityFields: [
+            { name: "ID", key: "id", type: "number", viewable: false },
+            { name: "Username", key: "username", type: "string", editable: true },
+            { name: "E-Mail", key: "email", type: "string", editable: true },
+            { name: "Confirmed", key: "confirmed", type: "boolean", editable: true },
+            { name: "Blocked", key: "blocked", type: "boolean", editable: true },
+        ],
+        hideFromPreview: ["id"],
+        icon: <People />,
+        getData: (a) => a,
+        getAttributes: (a) => a,
+    },
     "news-articles": {
         title: "Article",
         pluralTitle: "Articles",
@@ -40,7 +60,9 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Tags", key: "tags", type: "string", editable: true, localizable: true },
         ],
         hideFromPreview: ["id", "articleText", "subheadline", "titleImage", "articleMedia"],
-        icon: <Newspaper />
+        icon: <Newspaper />,
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
     },
     "mental-healthcares": {
         title: "Mental Healthcare",
@@ -53,7 +75,9 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Content", key: "content", type: "richtext", editable: true, localizable: true },
         ],
         hideFromPreview: ["id", "content"],
-        icon: <MedicalInformation />
+        icon: <MedicalInformation />,
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
     },
     "covids": {
         title: "Covid",
@@ -63,7 +87,9 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Description", key: "description", type: "string", editable: true, localizable: true }
         ],
         hideFromPreview: ["id"],
-        icon: <Coronavirus />
+        icon: <Coronavirus />,
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
     },
     "doctors": {
         title: "Doctor",
@@ -79,7 +105,9 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Picture", key: "picture", type: "image", editable: true, localizable: true },
         ],
         hideFromPreview: ["id", "location", "picture"],
-        icon: <MedicalServices />
+        icon: <MedicalServices />,
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
     },
     "locations": {
         title: "Location",
@@ -92,7 +120,9 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Content", key: "content", type: "richtext", editable: true, localizable: true },
         ],
         hideFromPreview: ["id", "content"],
-        icon: <LocationCity />
+        icon: <LocationCity />,
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
     },
     "offerings": {
         title: "Offering",
@@ -105,7 +135,9 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Icon", key: "icon", type: "image", editable: true, localizable: true },
         ],
         hideFromPreview: ["id"],
-        icon: <RoomService />
+        icon: <RoomService />,
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
     }
 };
 
