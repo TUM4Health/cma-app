@@ -1,4 +1,4 @@
-import { Dashboard, Logout, People } from '@mui/icons-material';
+import { Dashboard, Logout } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Button, ListSubheader } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
@@ -17,8 +17,7 @@ import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { ReactElement } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import content from '../../content/content';
-import { navigationStructure } from '../../content/content';
+import content, { navigationStructure } from '../../content/content';
 import { authenticationService } from '../../services/authentication.service';
 
 const drawerWidth = 240;
@@ -32,12 +31,6 @@ type NavigationItem = {
 const navigationItems: NavigationItem[] = [
     { name: "Dashboard", target: "/", icon: <Dashboard /> },
 ]
-
-const contentNavigationItems: NavigationItem[] = Object.keys(content).map((key) => ({
-    name: content[key].pluralTitle ?? content[key].title,
-    target: `/content/${key}`,
-    icon: content[key].icon
-}))
 
 export interface ActionItem {
     icon: ReactElement,
@@ -60,9 +53,10 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
 
     const navigation =
         Object.keys(navigationStructure).map((key) => {
-            return <>
+            return <Box key={key + "-container"}>
                 <Divider />
                 <List
+                    key={key}
                     subheader={
                         <ListSubheader>
                             {key}
@@ -79,7 +73,7 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
                         </ListItem>
                     ))}
                 </List>
-            </>
+            </Box>
         });
 
     const drawer = (

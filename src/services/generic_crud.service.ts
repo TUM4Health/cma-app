@@ -30,7 +30,7 @@ async function _getSingle(path: string, id: number) {
         method: "GET",
         headers: authHeader(),
     };
-    const response = await fetch(`${SERVER_URL}/api/${path}/${id}?populate=*`, requestOptions);
+    const response = await fetch(`${SERVER_URL}/api/${path}/${id}?populate=*&publicationState=preview`, requestOptions);
     return handleResponse(response);
 }
 
@@ -39,7 +39,7 @@ async function _getAll(path: string) {
         method: "GET",
         headers: authHeader(),
     };
-    const response = await fetch(`${SERVER_URL}/api/${path}?populate=*`, requestOptions);
+    const response = await fetch(`${SERVER_URL}/api/${path}?populate=*&publicationState=preview`, requestOptions);
     return handleResponse(response);
 }
 

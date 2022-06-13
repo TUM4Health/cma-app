@@ -26,7 +26,7 @@ const LoginPage: FC<any> = (): ReactElement => {
         if (authenticationService.currentUserValue.jwt != null) {
             navigate("/", { replace: true });
         }
-    }, []);
+    }, [navigate]);
 
     return (
         <>
