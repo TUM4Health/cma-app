@@ -29,7 +29,7 @@ export interface EntityField {
 }
 
 export const defaultLocale = { key: "en", label: "English", };
-export const contentLocales = [defaultLocale, { key: "de", label: "German" }, { key: "fr", label: "French" }];
+export const contentLocales = [defaultLocale, { key: "de", label: "German" }];
 
 const content: { [key: string]: ContentConfiguration } = {
     "users": {
