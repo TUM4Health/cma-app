@@ -44,6 +44,7 @@ export interface Props {
     objectId: number,
     setObjectId: Function,
     entityId: string,
+    published: boolean,
     setError: Function,
     setSuccess: Function,
     localizationConfiguration: LocalizationConfiguration
@@ -57,6 +58,7 @@ export default function submitContent({ values,
     objectId,
     setObjectId,
     entityId,
+    published,
     setError,
     setSuccess,
     localizationConfiguration }: Props) {
@@ -99,6 +101,8 @@ export default function submitContent({ values,
             }
         });
 
+        nonFileFields["publishedAt"] = published ? new Date() : null;
+
         const isLocalizationMode = Object.keys(localizationConfiguration).length !== 0;
         if (objectId === -1) { // Create
             var service = contentService.use(entityId);
@@ -127,8 +131,6 @@ export default function submitContent({ values,
             // Update
             contentService.use(entityId).update(config.putData(nonFileFields), objectId)
                 .then(async (resp) => {
-                    console.log(resp);
-
                     const oldImageIds = getImageIds(config, obj, namedFiles.map((nm) => nm.name), data);
                     // Now upload images & delete old
                     await Promise.all(

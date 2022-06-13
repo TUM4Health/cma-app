@@ -1,5 +1,5 @@
-import { Delete, Edit } from '@mui/icons-material';
-import { Avatar, Backdrop, CircularProgress, IconButton, Skeleton, Tooltip } from '@mui/material';
+import { Check, Delete, DoneAll, Edit, Unpublished } from '@mui/icons-material';
+import { Avatar, Backdrop, Chip, CircularProgress, IconButton, Skeleton, Tooltip } from '@mui/material';
 import { DataGrid, GridCellParams, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
@@ -75,6 +75,18 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
                 renderCell: ["string", "date", "number"].includes(entityField.type) ? null : renderCell(entityField.type)
             } as GridColDef)));
 
+        newColumns.push(
+            {
+                field: "state",
+                headerName: "State",
+                flex: 1,
+                renderCell: (params: GridValueGetterParams) =>
+                    <Chip label={params.value}
+                        color={params.value === "Published" ? "success" : "primary"}
+                        icon={params.value === "Published" ? <DoneAll /> : <Unpublished />} />
+            }
+        )
+
         newColumns.push({
             field: "actions",
             headerName: "Actions",
@@ -90,9 +102,12 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
 
         // Then update content
         contentService.use(props.entityId).getAll().then((response) => {
+            console.log(response);
+
             setContent(config.getData(response).map((item: any) => ({
                 id: item.id,
                 ...config.getAttributes(item),
+                state: config.getAttributes(item).publishedAt == null ? "Unpublished" : "Published"
             })));
         }).catch((error) => {
             setContent([]); // TODO: add error handling

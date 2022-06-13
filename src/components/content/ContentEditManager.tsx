@@ -1,6 +1,6 @@
 import { Done, Restore } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { Alert, Backdrop, Box, Button, CircularProgress, Stack, Toolbar, Tooltip, Typography } from '@mui/material';
+import { Alert, Backdrop, Box, Button, CircularProgress, FormControlLabel, FormGroup, Stack, Switch, Toolbar, Tooltip, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import { useEffect, useMemo, useState } from 'react';
 import { createSearchParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -13,6 +13,7 @@ import SimpleSelect from '../form/SimpleSelect';
 import getFormComponent from './ContentEditFormComponentUtil';
 import submitContent from './ContentEditSubmitHandler';
 import ApproveDialog from '../util/ApproveDialog';
+import { publish } from 'rxjs';
 
 interface Props {
     entityId: string,
@@ -45,6 +46,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     const [initialValues, setInitialValues] = useState({});
     const [error, setError] = useState(null as null | string);
     const [success, setSuccess] = useState(null as null | string);
+    const [published, setPublished] = useState(false);
     const [searchParams] = useSearchParams();
     const [approvableAction, setApprovableAction] = useState(null as { onApprove: Function } | null);
     let navigate = useNavigate();
@@ -77,6 +79,8 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         if (objectId !== -1) {
             contentService.use(props.entityId).getSingle(objectId).then((response) => {
                 setObj(response);
+                if (config.getData(response) != null && config.getAttributes(config.getData(response)) != null)
+                    setPublished(config.getAttributes(config.getData(response)).publishedAt != null);
             });
         } else {
             var newObj = getEmptyObject(config.entityFields);
@@ -84,6 +88,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                 newObj.locale = requestedLocale;
             }
             setObj(newObj);
+            setPublished(false);
         }
     }, [props, config.entityFields, objectId, isLocalizationMode, requestedLocale]);
 
@@ -123,7 +128,6 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         });
         setInitialValues(initialValues);
     }, [config.entityFields, obj]);
-
 
     // Go through existing localizations in the current fetched object and navigate accordingly
     const onLocaleChanged = (val: string) => {
@@ -169,6 +173,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         const emptyObj = getEmptyObject(config.entityFields.filter((field) => field.localizable));
         emptyObj.locale = locale;
         setObj(emptyObj); // Set empty object with configured locale
+        setPublished(false);
         // Retrieve path without id
         const pathWithoutId = window.location.pathname.slice(0, window.location.pathname.lastIndexOf("/"));
         // Replace window url, to allow reloads
@@ -177,7 +182,6 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             search: "?" + createSearchParams({ ref: originReferenceId, refLocale: originReferenceLocale, locale: locale }).toString()
         }, { replace: true });
     }
-
 
     const isLocalizable = useMemo(() =>
         config.entityFields.find((i) => i.localizable)
@@ -192,6 +196,9 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             <CircularProgress color="inherit" />
         </Backdrop>
     }
+
+    console.log(published);
+
 
     return <>
         <ApproveDialog
@@ -220,6 +227,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                     objectId,
                     setObjectId,
                     entityId,
+                    published,
                     setError,
                     setSuccess,
                     localizationConfiguration
@@ -257,10 +265,10 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                                     </Box>
                                 </Tooltip>
                             }
-                            {/* <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: 2 }}>
-                                Reset
-                            </Button> */}
-                            <LoadingButton loading={isSubmitting} variant="contained" type="submit" color="success" startIcon={<Done />} sx={{ ml: isLocalizable ? 2 : "auto" }}>
+                            <FormGroup>
+                                <FormControlLabel control={<Switch checked={published} onChange={(e) => { setPublished(!published) }} />} label="Published" sx={{ ml: isLocalizable ? 2 : "auto" }} />
+                            </FormGroup>
+                            <LoadingButton loading={isSubmitting} variant="contained" type="submit" color="success" startIcon={<Done />} sx={{ ml: 2 }} >
                                 Save
                             </LoadingButton>
                         </Toolbar>
