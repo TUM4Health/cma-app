@@ -8,7 +8,6 @@ import ContentEditPage from './pages/content_edit/content_edit.page';
 import DashboardPage from './pages/dashboard/dashboard.page';
 import LoginPage from './pages/login/login.page';
 import reportWebVitals from './reportWebVitals';
-import { authenticationService } from './services/authentication.service';
 import ThemeConfig from './theme/theme';
 
 const root = ReactDOM.createRoot(
@@ -16,7 +15,6 @@ const root = ReactDOM.createRoot(
 );
 
 const defaultProtectedRouteProps: Omit<ProtectedRouteProps, 'outlet'> = {
-  isAuthenticated: authenticationService.currentUserValue.jwt != null,
   authenticationPath: '/login',
 };
 
