@@ -1,4 +1,4 @@
-import { Dashboard, People } from '@mui/icons-material';
+import { Dashboard, Logout, People } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Button, ListSubheader } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
@@ -19,6 +19,7 @@ import { ReactElement } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import content from '../../content/content';
 import { navigationStructure } from '../../content/content';
+import { authenticationService } from '../../services/authentication.service';
 
 const drawerWidth = 240;
 
@@ -129,6 +130,9 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
                             {item.title}
                         </Button>
                     )}
+                    <Button startIcon={<Logout />} key={"logout"} onClick={() => { authenticationService.logout() }} color='inherit'>
+                        Logout
+                    </Button>
                 </Toolbar>
             </AppBar>
             <Box

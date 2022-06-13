@@ -16,7 +16,7 @@ const root = ReactDOM.createRoot(
 );
 
 const defaultProtectedRouteProps: Omit<ProtectedRouteProps, 'outlet'> = {
-  isAuthenticated: authenticationService.currentUser != null,
+  isAuthenticated: authenticationService.currentUserValue.jwt != null,
   authenticationPath: '/login',
 };
 
