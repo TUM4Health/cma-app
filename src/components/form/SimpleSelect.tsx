@@ -1,12 +1,14 @@
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, SxProps } from "@mui/material";
+import { useField } from "formik";
 
 export interface Props {
     id: string,
     label: string,
     value: any,
-    onChange: ((event: SelectChangeEvent<any>, child: React.ReactNode) => void),
+    onChange?: ((event: SelectChangeEvent<any>, child: React.ReactNode) => void),
     options: DropDownOption[],
-    disabled: boolean,
+    disabled?: boolean,
+    formikMode?: boolean,
 }
 
 export interface DropDownOption {
@@ -14,7 +16,8 @@ export interface DropDownOption {
     value: any,
 }
 
-export default function SimpleSelect({ id, label, value, onChange, options, disabled }: React.PropsWithChildren<Props>) {
+export default function SimpleSelect({ id, label, value, onChange, options, disabled, formikMode }: React.PropsWithChildren<Props>) {
+    const [field, meta, { setValue, setTouched }] = useField(id);
 
     return <FormControl fullWidth>
         <InputLabel id={`${id}-label`}>{label}</InputLabel>
@@ -22,9 +25,9 @@ export default function SimpleSelect({ id, label, value, onChange, options, disa
             disabled={disabled}
             labelId={`${id}-label`}
             id={id}
-            value={value}
+            value={formikMode ? field.value : value}
             label={label}
-            onChange={onChange}
+            onChange={formikMode ? (event) => setValue(event.target.value) : onChange}
         >
             {
                 options.map((entry) =>

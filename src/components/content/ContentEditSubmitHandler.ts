@@ -1,5 +1,5 @@
-import { ContentConfiguration } from '../../content/content';
-import { contentService, wrapInData } from '../../services/content.service';
+import content, { ContentConfiguration } from '../../content/content';
+import { contentService } from '../../services/content.service';
 import { NamedFile } from '../../services/generic_crud.service';
 import { deleteFile, uploadFiles } from '../../services/upload.service';
 import { AutocompleteOption } from '../form/RefSelectorField';
@@ -18,16 +18,16 @@ function isArrayOfStrings(obj: any[]) {
  * @param content the content configuration
  * @returns a list of ids of the images
  */
-function getImageIds(obj: any, keys: string[], content: ContentConfiguration) {
+function getImageIds(config: ContentConfiguration, obj: any, keys: string[], content: ContentConfiguration) {
     const ret: number[] = [];
     content.entityFields.forEach((field) => {
         if (field.type === "image" && keys.includes(field.key)) {
-            if (obj.data.attributes[field.key].data == null)
+            if (config.getAttributes(config.getData(obj))[field.key].data == null)
                 return;
             if (field.multiple) {
-                ret.push(...(obj.data.attributes[field.key].data as any[]).reduce((prev, cur) => [...prev, cur.id], []));
+                ret.push(...(config.getAttributes(config.getData(obj))[field.key].data as any[]).reduce((prev, cur) => [...prev, cur.id], []));
             } else {
-                ret.push(obj.data.attributes[field.key].data.id);
+                ret.push(config.getAttributes(config.getData(obj))[field.key].data.id);
             }
         }
     });
@@ -62,6 +62,7 @@ export default function submitContent({ values,
     localizationConfiguration }: Props) {
     const nonFileFields: { [key: string]: any } = {};
     const namedFiles: NamedFile[] = [];
+    const config = content[entityId];
     try {
         // First group fields into non file and file fields
         data.entityFields.forEach((field) => {
@@ -80,8 +81,8 @@ export default function submitContent({ values,
                     }
                 } else {
                     // To preserve initial images, the ids need to be readded
-                    if (obj.data && obj.data.attributes[field.key].data)
-                        nonFileFields[field.key] = obj.data.attributes[field.key].data.id;
+                    if (config.getData(obj) && config.getAttributes(config.getData(obj))[field.key].data)
+                        nonFileFields[field.key] = config.getAttributes(config.getData(obj))[field.key].data.id;
                 }
             } else if (field.type === "richtext" && typeof values[field.key] === "function") {
                 // If richtext, use workaround to retrieve editors value
@@ -107,10 +108,11 @@ export default function submitContent({ values,
                 nonFileFields["locale"] = localizationConfiguration.locale;
             }
             delete nonFileFields.id; // Remove id as is empty anyway
-            service.createWithFiles(nonFileFields, namedFiles)
+            (namedFiles.length > 0 ? service.createWithFiles(nonFileFields, namedFiles)
+                : service.create(nonFileFields))
                 .then((resp) => {
                     setSubmitting(false);
-                    var id = isLocalizationMode ? resp.id : resp.data.id;
+                    var id = isLocalizationMode ? resp.id : config.getData(resp).id;
                     setObjectId(id);
                     window.history.replaceState(null, "", window.location.pathname.slice(0, -3) + id)
                     setError(null);
@@ -123,9 +125,11 @@ export default function submitContent({ values,
                 });
         } else {
             // Update
-            contentService.use(entityId).update(wrapInData(nonFileFields), objectId)
+            contentService.use(entityId).update(config.putData(nonFileFields), objectId)
                 .then(async (resp) => {
-                    const oldImageIds = getImageIds(obj, namedFiles.map((nm) => nm.name), data);
+                    console.log(resp);
+
+                    const oldImageIds = getImageIds(config, obj, namedFiles.map((nm) => nm.name), data);
                     // Now upload images & delete old
                     await Promise.all(
                         [...namedFiles.map((namedFile) =>
@@ -144,7 +148,21 @@ export default function submitContent({ values,
                     console.error(error);
                     setSubmitting(false);
                     setSuccess(null);
-                    setError("An Error has occurred, please try again! (" + error + ")");
+                    if (error.data && error.data.error) {
+                        const errorInfo = error.data.error;
+                        if (errorInfo.name === "ValidationError") {
+                            setError("A Validation Error ocurred!");
+                        }
+                        if (errorInfo.details && errorInfo.details.errors) {
+                            errorInfo.details.errors.forEach((errorDetail: any) => {
+                                if (errorDetail.path.length === 1) {
+                                    setFieldError(errorDetail.path[0], `${errorDetail.name}: ${errorDetail.message}`);
+                                }
+                            })
+                        }
+                    } else {
+                        setError("An unknown Error has occurred, please try again! (" + error + ")");
+                    }
                 });
         }
     } catch (error) {

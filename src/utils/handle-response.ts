@@ -9,7 +9,7 @@ export function handleResponse(response: Response) {
                 // authenticationService.logout();
             }
             const error = (data && data.message) || response.statusText;
-            return Promise.reject(error);
+            return Promise.reject({ error: error, data: data });
         }
         return data;
     });

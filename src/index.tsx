@@ -7,7 +7,6 @@ import ContentPage from './pages/content/content.page';
 import ContentEditPage from './pages/content_edit/content_edit.page';
 import DashboardPage from './pages/dashboard/dashboard.page';
 import LoginPage from './pages/login/login.page';
-import UsersPage from './pages/users/users.page';
 import reportWebVitals from './reportWebVitals';
 import { authenticationService } from './services/authentication.service';
 import ThemeConfig from './theme/theme';
@@ -28,7 +27,6 @@ root.render(
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<DashboardPage />} />} />
-          <Route path='/users' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<UsersPage />} />} />
           <Route path="/content/:entityId/edit/:id" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentEditPage />} />} />
           <Route path="/content/:entityId" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentPage />} />} />
           <Route path="login" element={<LoginPage />} />

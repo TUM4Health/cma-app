@@ -37,7 +37,7 @@ function getEmptyObject(entityFields: EntityField[]) {
 }
 
 export default function ContentEditManager(props: React.PropsWithChildren<Props>) {
-    const data = content[props.entityId!];
+    const config = content[props.entityId!];
     const [obj, setObj] = useState({} as any);
     // If currently a localization of an entry is edited
     const [localizationConfiguration, setLocalizationConfiguration] = useState({} as LocalizationConfiguration);
@@ -56,12 +56,12 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     const isLocalizationMode = useMemo(() => Object.keys(localizationConfiguration).length !== 0, [localizationConfiguration]);
 
     const currentLocale = useMemo(() => {
-        var currentLocale = (obj.data && obj.data.attributes && obj.data.attributes.locale) ? obj.data.attributes.locale : defaultLocale.key;
+        var currentLocale = (config.getData(obj) && config.getAttributes(config.getData(obj)) && config.getAttributes(config.getData(obj)).locale) ? config.getAttributes(config.getData(obj)).locale : defaultLocale.key;
         if (isLocalizationMode) {
             currentLocale = requestedLocale;
         }
         return currentLocale;
-    }, [isLocalizationMode, obj.data, requestedLocale]);
+    }, [isLocalizationMode, obj, requestedLocale]);
 
     // If page was reload, we need to reconfigure the localizationConfiguration
     useEffect(() => {
@@ -79,26 +79,26 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                 setObj(response);
             });
         } else {
-            var newObj = getEmptyObject(data.entityFields);
+            var newObj = getEmptyObject(config.entityFields);
             if (isLocalizationMode) {
                 newObj.locale = requestedLocale;
             }
             setObj(newObj);
         }
-    }, [props, data.entityFields, objectId, isLocalizationMode, requestedLocale]);
+    }, [props, config.entityFields, objectId, isLocalizationMode, requestedLocale]);
 
     // Prefill form and setup formik with initalValues if data is retrieved
     useEffect(() => {
         const initialValues: { [key: string]: any } = {};
-        const combinedData = obj.data ? { "id": obj.data.id, ...obj.data.attributes } : {};
-        data.entityFields.forEach((field) => {
-            if (field.type === "image" && obj.data != null) {
+        const combinedData = config.getData(obj) ? { "id": config.getData(obj).id, ...config.getAttributes(config.getData(obj)) } : {};
+        config.entityFields.forEach((field) => {
+            if (field.type === "image" && config.getData(obj) != null) {
                 if (field.multiple) {
-                    initialValues[field.key] = getImageUrls(obj.data.attributes[field.key]);
+                    initialValues[field.key] = getImageUrls(config.getAttributes(config.getData(obj))[field.key]);
                 } else {
-                    initialValues[field.key] = getImageUrl(obj.data.attributes[field.key]);
+                    initialValues[field.key] = getImageUrl(config.getAttributes(config.getData(obj))[field.key]);
                 }
-            } else if (field.type.match(/ref:/) && obj.data != null) {
+            } else if (field.type.match(/ref:/) && config.getData(obj) != null) {
                 // Read the refProperties to set the value to the correct label
                 const refProperties = field.type.split(/ref:/)[1];
                 // If no properties provided, cancel => error in content file
@@ -122,7 +122,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             }
         });
         setInitialValues(initialValues);
-    }, [data.entityFields, obj]);
+    }, [config.entityFields, obj]);
 
 
     // Go through existing localizations in the current fetched object and navigate accordingly
@@ -130,8 +130,8 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         setApprovableAction({
             onApprove: () => {
                 // First check if the loaded object contains a localized entry for the selected localization
-                if (obj.data && obj.data.attributes.localizations && obj.data.attributes.localizations.data) {
-                    const found = obj.data.attributes.localizations.data.find((entry: any) =>
+                if (config.getData(obj) && config.getAttributes(config.getData(obj)).localizations && config.getAttributes(config.getData(obj)).localizations.data) {
+                    const found = config.getAttributes(config.getData(obj)).localizations.data.find((entry: any) =>
                         entry.attributes.locale === val
                     );
                     if (found) {
@@ -160,13 +160,13 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
     // Setup the form to be in localization mode with the required parameters
     const setupNewLocalization = (locale: string) => {
         // To be able to also switch from a new locale to another new locale, we might need to forward the original referenced existing entry
-        const originReferenceId = isLocalizationMode ? referencedId : obj.data.id;
-        const originReferenceLocale = isLocalizationMode ? referencedLocale : obj.data.attributes.locale ?? defaultLocale.key;
+        const originReferenceId = isLocalizationMode ? referencedId : config.getData(obj).id;
+        const originReferenceLocale = isLocalizationMode ? referencedLocale : config.getAttributes(config.getData(obj)).locale ?? defaultLocale.key;
         // TODO: show warning that data is lost (?)
         setLocalizationConfiguration({ id: originReferenceId, locale: locale });
         setObjectId(-1); // Reset objectId        
         // Create empty object with localizable field (for pushing later)
-        const emptyObj = getEmptyObject(data.entityFields.filter((field) => field.localizable));
+        const emptyObj = getEmptyObject(config.entityFields.filter((field) => field.localizable));
         emptyObj.locale = locale;
         setObj(emptyObj); // Set empty object with configured locale
         // Retrieve path without id
@@ -210,7 +210,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                     values,
                     setSubmitting,
                     setFieldError,
-                    data,
+                    data: config,
                     obj,
                     objectId,
                     setObjectId,
@@ -236,20 +236,22 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                         <Toolbar>
                             <Typography variant="h4" component="h1" sx={{ mb: 2 }} >
                                 {objectId === -1 ? ("Create" + (isLocalizationMode ? " localization for " : "")) : "Edit"}
-                                {` ${data.title}`}
+                                {` ${config.title}`}
                             </Typography>
                             { /* Check if the object is newly created, if so, do not show localization select */}
-                            <Tooltip arrow placement="left" title={!isLocalizationMode && objectId === -1 ? "You need to create an entry with the default locale before you can add other locales" : "Choose the locale to edit"}>
-                                <Box sx={{ ml: "auto" }}>
-                                    <SimpleSelect
-                                        id='locale'
-                                        label='Locale'
-                                        disabled={objectId === -1 && !isLocalizationMode} // Disable localization chooser if creation entry with default locale
-                                        value={currentLocale}
-                                        onChange={(ev) => onLocaleChanged(ev.target.value)}
-                                        options={contentLocales.map((l) => ({ value: l.key, label: l.label }))} />
-                                </Box>
-                            </Tooltip>
+                            {config.entityFields.find((i) => i.localizable) &&
+                                <Tooltip arrow placement="left" title={!isLocalizationMode && objectId === -1 ? "You need to create an entry with the default locale before you can add other locales" : "Choose the locale to edit"}>
+                                    <Box sx={{ ml: "auto" }}>
+                                        <SimpleSelect
+                                            id='locale'
+                                            label='Locale'
+                                            disabled={objectId === -1 && !isLocalizationMode} // Disable localization chooser if creation entry with default locale
+                                            value={currentLocale}
+                                            onChange={(ev) => onLocaleChanged(ev.target.value)}
+                                            options={contentLocales.map((l) => ({ value: l.key, label: l.label }))} />
+                                    </Box>
+                                </Tooltip>
+                            }
                             <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: 2 }}>
                                 Reset
                             </Button>
@@ -260,10 +262,13 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                         <Stack>
                             {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
                             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-                            {data.entityFields
+                            {config.entityFields
                                 .filter((field) => field.viewable ?? true)
                                 .filter((field) => isLocalizationMode ? field.localizable : true)
-                                .map((field) => getFormComponent(values, field, handleChange, handleBlur))
+                                .map((field) => <Stack>
+                                    {getFormComponent(values, field, handleChange, handleBlur)}
+                                    {errors[field.key] && <Alert sx={{ mb: 2 }} severity="error"> {errors[field.key]?.toString()} </Alert>}
+                                </Stack>)
                             }
                         </Stack>
                     </form>

@@ -9,11 +9,13 @@ export interface ContentConfiguration {
     icon: ReactElement,
     apiId: string,
     getData: GetDataFunction,
+    putData: PutDataFunction,
     getAttributes: GetAttributesFunction
 }
 
 type GetAttributesFunction = (a: any) => any;
-type GetDataFunction = (a: any) => any[];
+type GetDataFunction = (a: any) => any[] | any;
+type PutDataFunction = (a: any) => any[] | any;
 
 export interface EntityField {
     name: string,
@@ -36,13 +38,15 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "ID", key: "id", type: "number", viewable: false },
             { name: "Username", key: "username", type: "string", editable: true },
             { name: "E-Mail", key: "email", type: "string", editable: true },
+            { name: "Password", key: "password", type: "password", editable: true },
             { name: "Confirmed", key: "confirmed", type: "boolean", editable: true },
             { name: "Blocked", key: "blocked", type: "boolean", editable: true },
         ],
-        hideFromPreview: ["id"],
+        hideFromPreview: ["id", "password"],
         icon: <People />,
         getData: (a) => a,
         getAttributes: (a) => a,
+        putData: (a) => a,
     },
     "news-articles": {
         title: "Article",
@@ -63,6 +67,7 @@ const content: { [key: string]: ContentConfiguration } = {
         icon: <Newspaper />,
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
     },
     "mental-healthcares": {
         title: "Mental Healthcare",
@@ -78,6 +83,7 @@ const content: { [key: string]: ContentConfiguration } = {
         icon: <MedicalInformation />,
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
     },
     "covids": {
         title: "Covid",
@@ -90,6 +96,7 @@ const content: { [key: string]: ContentConfiguration } = {
         icon: <Coronavirus />,
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
     },
     "doctors": {
         title: "Doctor",
@@ -108,6 +115,7 @@ const content: { [key: string]: ContentConfiguration } = {
         icon: <MedicalServices />,
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
     },
     "locations": {
         title: "Location",
@@ -123,6 +131,7 @@ const content: { [key: string]: ContentConfiguration } = {
         icon: <LocationCity />,
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
     },
     "offerings": {
         title: "Offering",
@@ -138,6 +147,7 @@ const content: { [key: string]: ContentConfiguration } = {
         icon: <RoomService />,
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
     }
 };
 
