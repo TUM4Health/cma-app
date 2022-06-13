@@ -75,17 +75,18 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
                 renderCell: ["string", "date", "number"].includes(entityField.type) ? null : renderCell(entityField.type)
             } as GridColDef)));
 
-        newColumns.push(
-            {
-                field: "state",
-                headerName: "State",
-                flex: 1,
-                renderCell: (params: GridValueGetterParams) =>
-                    <Chip label={params.value}
-                        color={params.value === "Published" ? "success" : "primary"}
-                        icon={params.value === "Published" ? <DoneAll /> : <Unpublished />} />
-            }
-        )
+        if (config.publishable)
+            newColumns.push(
+                {
+                    field: "state",
+                    headerName: "State",
+                    flex: 1,
+                    renderCell: (params: GridValueGetterParams) =>
+                        <Chip label={params.value}
+                            color={params.value === "Published" ? "success" : "primary"}
+                            icon={params.value === "Published" ? <DoneAll /> : <Unpublished />} />
+                }
+            )
 
         newColumns.push({
             field: "actions",

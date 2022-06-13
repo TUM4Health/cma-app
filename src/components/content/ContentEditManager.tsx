@@ -265,10 +265,12 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                                     </Box>
                                 </Tooltip>
                             }
-                            <FormGroup>
-                                <FormControlLabel control={<Switch checked={published} onChange={(e) => { setPublished(!published) }} />} label="Published" sx={{ ml: isLocalizable ? 2 : "auto" }} />
-                            </FormGroup>
-                            <LoadingButton loading={isSubmitting} variant="contained" type="submit" color="success" startIcon={<Done />} sx={{ ml: 2 }} >
+                            {config.publishable &&
+                                <FormGroup>
+                                    <FormControlLabel control={<Switch checked={published} onChange={(e) => { setPublished(!published) }} />} label="Published" sx={{ ml: isLocalizable ? 2 : "auto" }} />
+                                </FormGroup>
+                            }
+                            <LoadingButton loading={isSubmitting} variant="contained" type="submit" color="success" startIcon={<Done />} sx={{ ml: isLocalizable || config.publishable ? 2 : "auto" }} >
                                 Save
                             </LoadingButton>
                         </Toolbar>
