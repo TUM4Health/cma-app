@@ -18,6 +18,7 @@ import * as React from 'react';
 import { ReactElement } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import content from '../../content/content';
+import { navigationStructure } from '../../content/content';
 
 const drawerWidth = 240;
 
@@ -29,7 +30,6 @@ type NavigationItem = {
 
 const navigationItems: NavigationItem[] = [
     { name: "Dashboard", target: "/", icon: <Dashboard /> },
-    { name: "Users", target: "/users", icon: <People /> },
 ]
 
 const contentNavigationItems: NavigationItem[] = Object.keys(content).map((key) => ({
@@ -57,6 +57,30 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
         setMobileOpen(!mobileOpen);
     };
 
+    const navigation =
+        Object.keys(navigationStructure).map((key) => {
+            return <>
+                <Divider />
+                <List
+                    subheader={
+                        <ListSubheader>
+                            {key}
+                        </ListSubheader>
+                    }>
+                    {navigationStructure[key].map((item, index) => (
+                        <ListItem key={content[item].pluralTitle ?? content[item].title} disablePadding>
+                            <ListItemButton selected={location.pathname === `/content/${item}`} component={Link} to={`/content/${item}`}>
+                                <ListItemIcon>
+                                    {content[item].icon}
+                                </ListItemIcon>
+                                <ListItemText primary={content[item].pluralTitle ?? content[item].title} />
+                            </ListItemButton>
+                        </ListItem>
+                    ))}
+                </List>
+            </>
+        });
+
     const drawer = (
         <div>
             <Toolbar />
@@ -73,24 +97,7 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
                     </ListItem>
                 ))}
             </List>
-            <Divider />
-            <List
-                subheader={
-                    <ListSubheader>
-                        Content
-                    </ListSubheader>
-                }>
-                {contentNavigationItems.map((item, index) => (
-                    <ListItem key={item.name} disablePadding>
-                        <ListItemButton selected={location.pathname === item.target} component={Link} to={item.target}>
-                            <ListItemIcon>
-                                {item.icon}
-                            </ListItemIcon>
-                            <ListItemText primary={item.name} />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
-            </List>
+            {navigation}
         </div>
     );
 

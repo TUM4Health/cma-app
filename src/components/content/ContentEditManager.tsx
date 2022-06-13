@@ -178,6 +178,11 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         }, { replace: true });
     }
 
+
+    const isLocalizable = useMemo(() =>
+        config.entityFields.find((i) => i.localizable)
+        , [config.entityFields]);
+
     // If nothing was loaded yet, show loading overlay
     if (Object.keys(obj).length === 0 || Object.keys(initialValues).length === 0) {
         return <Backdrop
@@ -239,7 +244,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                                 {` ${config.title}`}
                             </Typography>
                             { /* Check if the object is newly created, if so, do not show localization select */}
-                            {config.entityFields.find((i) => i.localizable) &&
+                            {isLocalizable &&
                                 <Tooltip arrow placement="left" title={!isLocalizationMode && objectId === -1 ? "You need to create an entry with the default locale before you can add other locales" : "Choose the locale to edit"}>
                                     <Box sx={{ ml: "auto" }}>
                                         <SimpleSelect
@@ -252,10 +257,10 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                                     </Box>
                                 </Tooltip>
                             }
-                            <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: 2 }}>
+                            {/* <Button disabled={isSubmitting} variant="contained" type="reset" startIcon={<Restore />} sx={{ ml: 2 }}>
                                 Reset
-                            </Button>
-                            <LoadingButton loading={isSubmitting} variant="contained" type="submit" color="success" startIcon={<Done />} sx={{ ml: 2 }}>
+                            </Button> */}
+                            <LoadingButton loading={isSubmitting} variant="contained" type="submit" color="success" startIcon={<Done />} sx={{ ml: isLocalizable ? 2 : "auto" }}>
                                 Save
                             </LoadingButton>
                         </Toolbar>

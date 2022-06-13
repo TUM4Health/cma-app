@@ -32,7 +32,8 @@ export const contentLocales = [defaultLocale, { key: "de", label: "German" }, { 
 
 const content: { [key: string]: ContentConfiguration } = {
     "users": {
-        title: "Users",
+        title: "User",
+        pluralTitle: "Users",
         apiId: "user",
         entityFields: [
             { name: "ID", key: "id", type: "number", viewable: false },
@@ -149,6 +150,18 @@ const content: { [key: string]: ContentConfiguration } = {
         getAttributes: (a) => a.attributes,
         putData: (a) => ({ data: a }),
     }
+};
+
+type NavigationStructure = { [key: string]: string[] };
+
+export const navigationStructure: NavigationStructure = {
+    "Administration": ["users"],
+    "Content": ["news-articles",
+        "mental-healthcares",
+        "covids",
+        "doctors",
+        "locations",
+        "offerings"]
 };
 
 export default content;
