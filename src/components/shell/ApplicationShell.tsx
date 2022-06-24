@@ -1,5 +1,6 @@
-import { Dashboard, Newspaper, People } from '@mui/icons-material';
+import { Dashboard, Logout } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
+import { Button, ListSubheader } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -16,6 +17,8 @@ import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { ReactElement } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import content, { navigationStructure } from '../../content/content';
+import { authenticationService } from '../../services/authentication.service';
 
 const drawerWidth = 240;
 
@@ -27,12 +30,17 @@ type NavigationItem = {
 
 const navigationItems: NavigationItem[] = [
     { name: "Dashboard", target: "/", icon: <Dashboard /> },
-    { name: "Users", target: "/users", icon: <People /> },
-    { name: "Articles", target: "/articles", icon: <Newspaper /> }
 ]
 
+export interface ActionItem {
+    icon: ReactElement,
+    title: string,
+    onClick: Function
+}
+
 interface Props {
-    title: string
+    title: string,
+    actionItems?: ActionItem[]
 }
 
 export default function ApplicationShell(props: React.PropsWithChildren<Props>) {
@@ -42,6 +50,31 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
+
+    const navigation =
+        Object.keys(navigationStructure).map((key) => {
+            return <Box key={key + "-container"}>
+                <Divider />
+                <List
+                    key={key}
+                    subheader={
+                        <ListSubheader>
+                            {key}
+                        </ListSubheader>
+                    }>
+                    {navigationStructure[key].map((item, index) => (
+                        <ListItem key={content[item].pluralTitle ?? content[item].title} disablePadding>
+                            <ListItemButton selected={location.pathname === `/content/${item}`} component={Link} to={`/content/${item}`}>
+                                <ListItemIcon>
+                                    {content[item].icon}
+                                </ListItemIcon>
+                                <ListItemText primary={content[item].pluralTitle ?? content[item].title} />
+                            </ListItemButton>
+                        </ListItem>
+                    ))}
+                </List>
+            </Box>
+        });
 
     const drawer = (
         <div>
@@ -59,6 +92,7 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
                     </ListItem>
                 ))}
             </List>
+            {navigation}
         </div>
     );
 
@@ -82,9 +116,17 @@ export default function ApplicationShell(props: React.PropsWithChildren<Props>) 
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div">
+                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                         {props.title}
                     </Typography>
+                    {props.actionItems && props.actionItems.map((item) =>
+                        <Button startIcon={item.icon} key={item.title} onClick={() => { item.onClick() }} color='inherit'>
+                            {item.title}
+                        </Button>
+                    )}
+                    <Button startIcon={<Logout />} key={"logout"} onClick={() => { authenticationService.logout() }} color='inherit'>
+                        Logout
+                    </Button>
                 </Toolbar>
             </AppBar>
             <Box

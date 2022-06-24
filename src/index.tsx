@@ -1,39 +1,37 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import reportWebVitals from './reportWebVitals';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from '@emotion/react';
-import theme from './theme/theme';
-import LoginPage from './pages/login/login.page';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute, { ProtectedRouteProps } from './components/authentication/ProtectedRoute';
-import { authenticationService } from './services/authentication.service';
+import './index.css';
+import ContentPage from './pages/content/content.page';
+import ContentEditPage from './pages/content_edit/content_edit.page';
 import DashboardPage from './pages/dashboard/dashboard.page';
-import UsersPage from './pages/users/users.page';
-import ArticlesPage from './pages/articles/articles.page';
+import LoginPage from './pages/login/login.page';
+import reportWebVitals from './reportWebVitals';
+import ThemeConfig from './theme/theme';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
 const defaultProtectedRouteProps: Omit<ProtectedRouteProps, 'outlet'> = {
-  isAuthenticated: authenticationService.currentUser != null,
   authenticationPath: '/login',
 };
 
 
 root.render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
+    <ThemeConfig>
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<DashboardPage />} />} />
-          <Route path='/users' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<UsersPage />} />} />
-          <Route path='/articles' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ArticlesPage />} />} />
+          <Route path="/content/:entityId/edit/:id" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentEditPage />} />} />
+          <Route path="/content/:entityId" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentPage />} />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
-    </ThemeProvider>
+    </ThemeConfig>
   </React.StrictMode>
 );
 
