@@ -197,9 +197,6 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
         </Backdrop>
     }
 
-    console.log(published);
-
-
     return <>
         <ApproveDialog
             key="discard-changes"

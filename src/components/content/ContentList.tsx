@@ -56,7 +56,7 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
             contentService.use(props.entityId).getAll().then((response) => {
                 setContent(config.getData(response).map((item: any) => ({
                     id: item.id,
-                    ...item.attributes,
+                    ...config.getAttributes(item),
                 })));
             });
         });

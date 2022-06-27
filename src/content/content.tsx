@@ -66,7 +66,7 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Article-Media", key: "articleMedia", type: "image", multiple: true, editable: true, localizable: true },
             { name: "Tags", key: "tags", type: "string", editable: true, localizable: true },
         ],
-        hideFromPreview: ["id", "articleText", "subheadline", "titleImage", "articleMedia"],
+        hideFromPreview: ["id", "articleText", "description", "titleImage", "articleMedia"],
         icon: <Newspaper />,
         publishable: true,
         getData: (a) => a.data,
