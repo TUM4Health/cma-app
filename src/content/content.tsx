@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService, People } from '@mui/icons-material';
+import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService, People, QuestionAnswer } from '@mui/icons-material';
 
 export interface ContentConfiguration {
     title: string,
@@ -157,6 +157,21 @@ const content: { [key: string]: ContentConfiguration } = {
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
         putData: (a) => ({ data: a }),
+    },
+    "surveys": {
+        title: "Surveys",
+        apiId: "surveys",
+        entityFields: [
+            { name: "ID", key: "id", type: "number", viewable: false, editable: true },
+            { name: "Description", key: "description", type: "string", editable: true, localizable: true },
+            { name: "Icon", key: "icon", type: "image", editable: true, localizable: true },
+        ],
+        hideFromPreview: ["id"],
+        icon: <QuestionAnswer />,
+        publishable: true,
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
     }
 };
 
@@ -169,7 +184,9 @@ export const navigationStructure: NavigationStructure = {
         "covids",
         "doctors",
         "locations",
-        "offerings"]
+        "offerings",],
+    "Interactive": [
+        "surveys"]
 };
 
 export default content;
