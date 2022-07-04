@@ -1,6 +1,6 @@
-import { Done, Restore } from '@mui/icons-material';
+import { Done } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { Alert, Backdrop, Box, Button, CircularProgress, FormControlLabel, FormGroup, Stack, Switch, Toolbar, Tooltip, Typography } from '@mui/material';
+import { Alert, Backdrop, Box, CircularProgress, FormControlLabel, FormGroup, Stack, Switch, Toolbar, Tooltip, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import { useEffect, useMemo, useState } from 'react';
 import { createSearchParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -10,14 +10,14 @@ import { getImageUrl, getImageUrls } from '../../services/upload.service';
 import { getEmptyValueByType } from '../../utils/typeUtil';
 import { getItemAsValue } from '../form/RefSelectorField';
 import SimpleSelect from '../form/SimpleSelect';
+import ApproveDialog from '../util/ApproveDialog';
 import getFormComponent from './ContentEditFormComponentUtil';
 import submitContent from './ContentEditSubmitHandler';
-import ApproveDialog from '../util/ApproveDialog';
-import { publish } from 'rxjs';
 
 interface Props {
     entityId: string,
     objectId: number,
+    afterSubmit?: Function
 }
 
 export interface LocalizationConfiguration {
@@ -90,7 +90,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             setObj(newObj);
             setPublished(false);
         }
-    }, [props, config.entityFields, objectId, isLocalizationMode, requestedLocale]);
+    }, [props.entityId, config.entityFields, objectId, isLocalizationMode, requestedLocale]);
 
     // Prefill form and setup formik with initalValues if data is retrieved
     useEffect(() => {
@@ -229,7 +229,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                     setSuccess,
                     localizationConfiguration
                 });
-
+                props.afterSubmit && props.afterSubmit();
             }}
         >
             {({

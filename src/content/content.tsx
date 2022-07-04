@@ -11,12 +11,14 @@ export interface ContentConfiguration {
     publishable: boolean,
     getData: GetDataFunction,
     putData: PutDataFunction,
-    getAttributes: GetAttributesFunction
+    getAttributes: GetAttributesFunction,
+    editPathGenerator?: CustomEditPathGenerator
 }
 
 type GetAttributesFunction = (a: any) => any;
 type GetDataFunction = (a: any) => any[] | any;
 type PutDataFunction = (a: any) => any[] | any;
+type CustomEditPathGenerator = (entityId: string, objectId: number) => string;
 
 export interface EntityField {
     name: string,
@@ -158,17 +160,18 @@ const content: { [key: string]: ContentConfiguration } = {
         getAttributes: (a) => a.attributes,
         putData: (a) => ({ data: a }),
     },
-    "surveys": {
-        title: "Surveys",
-        apiId: "surveys",
+    "survey-questions": {
+        title: "Survey",
+        pluralTitle: "Survey",
+        apiId: "survey-questions",
         entityFields: [
             { name: "ID", key: "id", type: "number", viewable: false, editable: true },
-            { name: "Description", key: "description", type: "string", editable: true, localizable: true },
-            { name: "Icon", key: "icon", type: "image", editable: true, localizable: true },
+            { name: "Question", key: "question", type: "string", editable: true, localizable: true },
         ],
         hideFromPreview: ["id"],
         icon: <QuestionAnswer />,
         publishable: true,
+        editPathGenerator: (entityId, id) => { return `/survey/${id}`; },
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
         putData: (a) => ({ data: a }),
@@ -186,7 +189,7 @@ export const navigationStructure: NavigationStructure = {
         "locations",
         "offerings",],
     "Interactive": [
-        "surveys"]
+        "survey-questions"]
 };
 
 export default content;
