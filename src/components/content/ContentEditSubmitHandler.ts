@@ -112,8 +112,8 @@ export default function submitContent({ values,
                 nonFileFields["locale"] = localizationConfiguration.locale;
             }
             delete nonFileFields.id; // Remove id as is empty anyway
-            (namedFiles.length > 0 ? service.createWithFiles(nonFileFields, namedFiles)
-                : service.create(nonFileFields))
+            (namedFiles.length > 0 ? service.createWithFiles(config.putData(nonFileFields), namedFiles)
+                : service.create(config.putData(nonFileFields)))
                 .then((resp) => {
                     setSubmitting(false);
                     var id = isLocalizationMode ? resp.id : config.getData(resp).id;
