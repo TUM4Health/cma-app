@@ -96,6 +96,10 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
                             config.getData(response).map((item: any) => ({
                                 id: item.id,
                                 ...config.getAttributes(item),
+                                state:
+                                    config.getAttributes(item).publishedAt == null
+                                        ? "Unpublished"
+                                        : "Published",
                             }))
                         );
                     });
