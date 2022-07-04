@@ -3,7 +3,7 @@ import { contentService } from '../../services/content.service';
 import { NamedFile } from '../../services/generic_crud.service';
 import { deleteFile, uploadFiles } from '../../services/upload.service';
 import { AutocompleteOption } from '../form/RefSelectorField';
-import { LocalizationConfiguration } from './ContentEditManager';
+import { AfterSubmitFunction, LocalizationConfiguration } from './ContentEditManager';
 
 function isArrayOfStrings(obj: any[]) {
     if (typeof obj != "object" || !Array.isArray(obj))
@@ -47,7 +47,8 @@ export interface Props {
     published: boolean,
     setError: Function,
     setSuccess: Function,
-    localizationConfiguration: LocalizationConfiguration
+    localizationConfiguration: LocalizationConfiguration,
+    afterSubmit?: AfterSubmitFunction
 }
 
 export default function submitContent({ values,
@@ -61,6 +62,7 @@ export default function submitContent({ values,
     published,
     setError,
     setSuccess,
+    afterSubmit,
     localizationConfiguration }: Props) {
     const nonFileFields: { [key: string]: any } = {};
     const namedFiles: NamedFile[] = [];
@@ -107,17 +109,20 @@ export default function submitContent({ values,
         if (objectId === -1) { // Create
             var service = contentService.use(entityId);
             // Creating localized entry
+            var putData = config.putData(nonFileFields);
             if (isLocalizationMode && objectId === -1) {
                 service = contentService.useLocalized(entityId, localizationConfiguration.id);
                 nonFileFields["locale"] = localizationConfiguration.locale;
+                putData = nonFileFields;
             }
             delete nonFileFields.id; // Remove id as is empty anyway
-            (namedFiles.length > 0 ? service.createWithFiles(config.putData(nonFileFields), namedFiles)
-                : service.create(config.putData(nonFileFields)))
+            (namedFiles.length > 0 ? service.createWithFiles(putData, namedFiles)
+                : service.create(putData))
                 .then((resp) => {
                     setSubmitting(false);
                     var id = isLocalizationMode ? resp.id : config.getData(resp).id;
                     setObjectId(id);
+                    afterSubmit && afterSubmit(id);
                     window.history.replaceState(null, "", window.location.pathname.slice(0, -3) + id)
                     setError(null);
                     setSuccess("Entry created!");
@@ -142,6 +147,7 @@ export default function submitContent({ values,
                         ),
                         ...oldImageIds.map((id) => deleteFile(id))]
                     )
+                    afterSubmit && afterSubmit(objectId);
                     setSubmitting(false);
                     setError(null);
                     setSuccess("Entry updated!");

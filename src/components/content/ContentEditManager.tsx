@@ -14,10 +14,12 @@ import ApproveDialog from '../util/ApproveDialog';
 import getFormComponent from './ContentEditFormComponentUtil';
 import submitContent from './ContentEditSubmitHandler';
 
+export type AfterSubmitFunction = (id: number) => any;
+
 interface Props {
     entityId: string,
     objectId: number,
-    afterSubmit?: Function
+    afterSubmit?: AfterSubmitFunction
 }
 
 export interface LocalizationConfiguration {
@@ -215,6 +217,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             initialValues={initialValues}
             onSubmit={(values: any, { setSubmitting, setFieldError }) => {
                 const entityId = props.entityId;
+                const afterSubmit = props.afterSubmit;
                 submitContent({
                     values,
                     setSubmitting,
@@ -227,9 +230,9 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                     published,
                     setError,
                     setSuccess,
-                    localizationConfiguration
+                    afterSubmit,
+                    localizationConfiguration,
                 });
-                props.afterSubmit && props.afterSubmit();
             }}
         >
             {({

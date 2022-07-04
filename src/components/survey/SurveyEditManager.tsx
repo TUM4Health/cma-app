@@ -23,6 +23,9 @@ enum SurveyAnswerType {
 }
 
 function getAnswerType(obj: any) {
+    if (!obj.data) {
+        return SurveyAnswerType.NONE;
+    }
     if (obj.data.attributes["survey_question_freetext"].data != null) {
         return SurveyAnswerType.FREE_TEXT;
     } else if (obj.data.attributes["survey_question_range"].data != null) {
@@ -34,6 +37,9 @@ function getAnswerType(obj: any) {
 }
 
 function getAnswerConfiguration(obj: any, type: SurveyAnswerType) {
+    if (!obj.data) {
+        return null;
+    }
     var key = "survey_question_freetext";
     if (type === SurveyAnswerType.RANGE) {
         key = "survey_question_range";
@@ -89,12 +95,13 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
         });
     }
 
-    const onSubmit = () => {
+    const onSubmit = (id: number) => {
+        (formikRef.current as any).values.survey_id = id;
         (formikRef.current as any).handleSubmit();
     }
 
     const submitSurveyConfiguration = async (values: any, setSubmitting: (isSubmitting: boolean) => void) => {
-        console.log(values);
+        const surveyQuestionId = objectId === -1 ? values.survey_id : objectId;
         const previousType = getAnswerType(obj);
         const previousConfig = getAnswerConfiguration(obj, previousType);
 
@@ -105,11 +112,11 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
                 await contentService.use(previousType).deleteEntity(previousConfig.id);
             // Now create new answer type
             if (answerType === SurveyAnswerType.FREE_TEXT) {
-                await contentService.use(answerType).create(config.putData({ survey_question: objectId }));
+                await contentService.use(answerType).create(config.putData({ survey_question: surveyQuestionId }));
             }
             if (answerType === SurveyAnswerType.RANGE) {
                 await contentService.use(answerType).create(config.putData({
-                    survey_question: objectId,
+                    survey_question: surveyQuestionId,
                     minRange: values.minRange,
                     maxRange: values.maxRange,
                     stepsRange: values.stepsRange,

@@ -18,7 +18,7 @@ export interface ContentConfiguration {
 type GetAttributesFunction = (a: any) => any;
 type GetDataFunction = (a: any) => any[] | any;
 type PutDataFunction = (a: any) => any[] | any;
-type CustomEditPathGenerator = (entityId: string, objectId: number) => string;
+type CustomEditPathGenerator = (entityId: string, objectId: string | number) => string;
 
 export interface EntityField {
     name: string,
@@ -166,7 +166,7 @@ const content: { [key: string]: ContentConfiguration } = {
         apiId: "survey-questions",
         entityFields: [
             { name: "ID", key: "id", type: "number", viewable: false, editable: true },
-            { name: "Question", key: "question", type: "string", editable: true, localizable: true },
+            { name: "Question", key: "question", type: "string", editable: true, localizable: false },
         ],
         hideFromPreview: ["id"],
         icon: <QuestionAnswer />,
