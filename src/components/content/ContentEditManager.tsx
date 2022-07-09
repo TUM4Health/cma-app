@@ -8,6 +8,7 @@ import content, { contentLocales, defaultLocale, EntityField } from '../../conte
 import { contentService } from '../../services/content.service';
 import { getImageUrl, getImageUrls } from '../../services/upload.service';
 import { getEmptyValueByType } from '../../utils/typeUtil';
+import FormObserver from '../form/FormObserver';
 import { getItemAsValue } from '../form/RefSelectorField';
 import SimpleSelect from '../form/SimpleSelect';
 import ApproveDialog from '../util/ApproveDialog';
@@ -20,6 +21,7 @@ interface Props {
     entityId: string,
     objectId: number,
     afterSubmit?: AfterSubmitFunction
+    onChange?: (values: any) => any,
 }
 
 export interface LocalizationConfiguration {
@@ -246,6 +248,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             }) => (
                 <>
                     <form onSubmit={handleSubmit}>
+                        <FormObserver onValuesChanged={props.onChange} />
                         <Toolbar>
                             <Typography variant="h4" component="h1" sx={{ mb: 2 }} >
                                 {objectId === -1 ? ("Create" + (isLocalizationMode ? " localization for " : "")) : "Edit"}

@@ -1,6 +1,9 @@
 import { ReactElement } from 'react';
-import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService, People, QuestionAnswer } from '@mui/icons-material';
-
+import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService, People, QuestionAnswer, PieChart } from '@mui/icons-material';
+import {
+    IconButton,
+} from "@mui/material";
+import { Link } from 'react-router-dom';
 export interface ContentConfiguration {
     title: string,
     pluralTitle?: string,
@@ -9,16 +12,23 @@ export interface ContentConfiguration {
     icon: ReactElement,
     apiId: string,
     publishable: boolean,
+    customActions?: CustomAction[],
     getData: GetDataFunction,
     putData: PutDataFunction,
     getAttributes: GetAttributesFunction,
     editPathGenerator?: CustomEditPathGenerator
 }
 
+export interface CustomAction {
+    buttonGenerator: CustomActionButtonGenerator,
+    tooltipTile: string
+}
+
 type GetAttributesFunction = (a: any) => any;
 type GetDataFunction = (a: any) => any[] | any;
 type PutDataFunction = (a: any) => any[] | any;
 type CustomEditPathGenerator = (entityId: string, objectId: string | number) => string;
+type CustomActionButtonGenerator = (entitiyId: string, objectId: string | number) => ReactElement;
 
 export interface EntityField {
     name: string,
@@ -167,6 +177,7 @@ const content: { [key: string]: ContentConfiguration } = {
         entityFields: [
             { name: "ID", key: "id", type: "number", viewable: false, editable: true },
             { name: "Question", key: "question", type: "string", editable: true, localizable: false },
+            { name: "Type", key: "type", type: "enum:freetext;range;select", editable: true, localizable: false },
         ],
         hideFromPreview: ["id"],
         icon: <QuestionAnswer />,
@@ -175,6 +186,21 @@ const content: { [key: string]: ContentConfiguration } = {
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
         putData: (a) => ({ data: a }),
+        customActions: [
+            {
+                tooltipTile: "Show Survey Results",
+                buttonGenerator: (entityId, objectId) => (
+                    <IconButton
+                        component={Link}
+                        to={
+                            `/survey/${objectId}/results`
+                        }
+                    >
+                        <PieChart />
+                    </IconButton>
+                )
+            }
+        ]
     }
 };
 

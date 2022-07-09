@@ -36,6 +36,13 @@ const getActions = (
     onDelete: Function
 ) => (
     <>
+        {config.customActions?.map((action, index) => (
+            <Tooltip title={action.tooltipTile} key={index}>
+                <span>
+                    {action.buttonGenerator(entityId, id)}
+                </span>
+            </Tooltip>
+        ))}
         <Tooltip title="Edit">
             <IconButton
                 component={Link}

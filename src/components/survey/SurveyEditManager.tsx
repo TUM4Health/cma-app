@@ -16,24 +16,15 @@ interface Props {
 }
 
 enum SurveyAnswerType {
-    FREE_TEXT = "survey-question-freetexts",
-    RANGE = "survey-question-ranges",
-    SELECT = "survey-question-selects",
-    NONE = "null"
+    FREE_TEXT = "freetext",
+    RANGE = "range",
+    SELECT = "select",
 }
 
-function getAnswerType(obj: any) {
-    if (!obj.data) {
-        return SurveyAnswerType.NONE;
-    }
-    if (obj.data.attributes["survey_question_freetext"].data != null) {
-        return SurveyAnswerType.FREE_TEXT;
-    } else if (obj.data.attributes["survey_question_range"].data != null) {
-        return SurveyAnswerType.RANGE;
-    } else if (obj.data.attributes["survey_question_select"].data != null) {
-        return SurveyAnswerType.SELECT;
-    }
-    return SurveyAnswerType.NONE;
+const answerTypeToAPIKey = {
+    freetext: "survey-question-freetexts",
+    range: "survey-question-ranges",
+    select: "survey-question-selects",
 }
 
 function getAnswerConfiguration(obj: any, type: SurveyAnswerType) {
@@ -55,7 +46,7 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
     const [approvableAction, setApprovableAction] = useState(null as { onApprove: Function } | null);
     const [obj, setObj] = useState({} as any);
     const [objectId, setObjectId] = useState(props.objectId);
-    const [answerType, setAnswerType] = useState(SurveyAnswerType.NONE);
+    const [answerType, setAnswerType] = useState(SurveyAnswerType.FREE_TEXT);
     const formikRef = useRef();
     const [initialValues, setInitialValues] = useState({});
     const [selectConfig, setSelectConfig] = useState({});
@@ -71,7 +62,9 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
         if (objectId !== -1) {
             contentService.use(SURVEY_ENTITY_ID).getSingle(objectId).then((response) => {
                 setObj(response);
-                const answerType = getAnswerType(response);
+                console.log(response);
+
+                const answerType = response.data.attributes.type as SurveyAnswerType;
                 setAnswerType(answerType);
                 if (answerType === SurveyAnswerType.RANGE) {
                     rangeConfig = response.data.attributes["survey_question_range"].data.attributes;
@@ -102,20 +95,20 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
 
     const submitSurveyConfiguration = async (values: any, setSubmitting: (isSubmitting: boolean) => void) => {
         const surveyQuestionId = objectId === -1 ? values.survey_id : objectId;
-        const previousType = getAnswerType(obj);
+        const previousType = obj.data.attributes.type as SurveyAnswerType;
         const previousConfig = getAnswerConfiguration(obj, previousType);
 
         console.log(`Previous: ${previousType} - Now: ${answerType}`);
 
         if (previousType !== answerType) { // Type was changed, delete previous one if exists    
             if (previousConfig)
-                await contentService.use(previousType).deleteEntity(previousConfig.id);
+                await contentService.use(answerTypeToAPIKey[previousType]).deleteEntity(previousConfig.id);
             // Now create new answer type
             if (answerType === SurveyAnswerType.FREE_TEXT) {
-                await contentService.use(answerType).create(config.putData({ survey_question: surveyQuestionId }));
+                await contentService.use(answerTypeToAPIKey[answerType]).create(config.putData({ survey_question: surveyQuestionId }));
             }
             if (answerType === SurveyAnswerType.RANGE) {
-                await contentService.use(answerType).create(config.putData({
+                await contentService.use(answerTypeToAPIKey[answerType]).create(config.putData({
                     survey_question: surveyQuestionId,
                     minRange: values.minRange,
                     maxRange: values.maxRange,
@@ -130,7 +123,7 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
                     || values.stepsRange !== previousConfig.attributes.stepsRange) {
 
                     // Update existing range config with new data
-                    await contentService.use(answerType).update(config.putData({
+                    await contentService.use(answerTypeToAPIKey[answerType]).update(config.putData({
                         minRange: values.minRange,
                         maxRange: values.maxRange,
                         stepsRange: values.stepsRange,
@@ -144,24 +137,15 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
 
     return (
         <>
-            <ApproveDialog
-                key="discard-changes"
-                title={`Discard possible changes?`}
-                description={
-                    `This action can not be reversed!`
-                }
-                approveTitle="Discard"
-                cancelTitle='Cancel'
-                handleApprove={() => { if (approvableAction) { approvableAction.onApprove(); setApprovableAction(null); } }}
-                handleCancel={() => setApprovableAction(null)}
-                open={approvableAction != null}
-            />
             <Container>
                 <ContentEditManager
                     key={"content-edit"}
                     objectId={props.objectId}
                     entityId={SURVEY_ENTITY_ID}
                     afterSubmit={onSubmit}
+                    onChange={(values) => {
+                        setAnswerType(values.type as SurveyAnswerType);
+                    }}
                 />
                 <Box sx={{ mt: 2 }} />
                 <Formik
@@ -183,28 +167,6 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
                     }) => (
                         <>
                             <form onSubmit={handleSubmit}>
-                                <SimpleSelect
-                                    id="type"
-                                    label="Answer Type"
-                                    options={[
-                                        { label: "Free Text", value: SurveyAnswerType.FREE_TEXT },
-                                        { label: "Range", value: SurveyAnswerType.RANGE },
-                                        { label: "Select", value: SurveyAnswerType.SELECT }
-                                    ]}
-                                    onChange={(ev) => {
-                                        if (answerType === SurveyAnswerType.SELECT) {
-                                            setApprovableAction({
-                                                onApprove: () => {
-                                                    setAnswerType(ev.target.value);
-                                                }
-                                            });
-                                        } else {
-                                            setAnswerType(ev.target.value);
-                                        }
-                                    }}
-                                    value={answerType}
-                                />
-
                                 {answerType === SurveyAnswerType.RANGE &&
                                     <Box>
                                         <Stack sx={{ mt: 2 }} direction={"row"}>
