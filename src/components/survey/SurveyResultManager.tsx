@@ -41,6 +41,22 @@ const SurveyResultManager: FC<any> = (props: Props): ReactElement => {
                 console.log(questionObj);
 
                 if (answerType === SurveyAnswerType.SELECT) {
+                    console.log(questionObj);
+
+                    // const selectedSurveyChoices = questionObj.survey_response_selects.data;
+                    // var aggregatedSelectChoices: { [key: string]: number } = {};
+                    // await Promise.all(selectedSurveyChoices.map(async (response: any) => {
+                    //     return await contentService.use("survey-response-selects").getSingle(response.id).then(async (response) => {
+                    //         console.log(response);
+                    //         const selectedChoice = response.data.attributes.survey_question_select_choices.data.id;
+                    //         if (aggregatedSelectChoices[selectedChoice] === undefined) {
+                    //             aggregatedSelectChoices[selectedChoice] = 1;
+                    //         } else {
+                    //             aggregatedSelectChoices[selectedChoice]++;
+                    //         }
+                    //     })
+                    // }));
+                    // setResultObject(aggregatedSelectChoices);
                 } else if (answerType === SurveyAnswerType.RANGE) {
                     var aggregatedAnswers: { [key: number]: number } = {};
                     for (var index = questionObj.minRange; index <= questionObj.maxRange; index += questionObj.stepsRange) {
@@ -78,6 +94,20 @@ const SurveyResultManager: FC<any> = (props: Props): ReactElement => {
                         (
                             <>
                                 {questionObject && <Typography>On a range from {questionObject.minRange} to {questionObject.maxRange} with a step-size of {questionObject.stepsRange}:</Typography>}
+                                <Box sx={{ mt: 2 }} >
+                                    <SimpleBarChart
+                                        id="test"
+                                        width="500"
+                                        height="350"
+                                        xAxisLabels={Object.keys(resultObject)}
+                                        data={[{ name: "Answers", data: Object.values(resultObject) }]}
+                                    />
+                                </Box>
+                            </>)
+                    }
+                    {answerType === SurveyAnswerType.SELECT &&
+                        (
+                            <>
                                 <Box sx={{ mt: 2 }} >
                                     <SimpleBarChart
                                         id="test"
