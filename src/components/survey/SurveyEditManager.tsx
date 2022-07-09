@@ -1,14 +1,12 @@
 import { Container, Stack, TextField } from "@mui/material";
 import { Box } from "@mui/system";
-import { Formik, FormikContextType } from "formik";
-import { FC, ReactElement, useEffect, useState, useMemo, useRef } from "react";
+import { Formik } from "formik";
+import { FC, ReactElement, useEffect, useRef, useState } from "react";
 import content from "../../content/content";
 import { SURVEY_ENTITY_ID } from "../../pages/survey/survey.page";
 import { contentService } from "../../services/content.service";
 import ContentEditManager from "../content/ContentEditManager";
-import SimpleSelect from '../form/SimpleSelect';
-import ApproveDialog from "../util/ApproveDialog";
-import { log } from 'console';
+import SurveySelectEditor, { SelectOption } from "./SurveySelectEditor";
 
 
 interface Props {
@@ -33,6 +31,8 @@ export const answerTypeToObjectField = {
     select: "survey_question_select",
 }
 
+const surveySelectChoiceAPIKey = "survey-question-select-choices";
+
 function getAnswerConfiguration(obj: any, type: SurveyAnswerType) {
     if (!obj.data) {
         return null;
@@ -42,13 +42,13 @@ function getAnswerConfiguration(obj: any, type: SurveyAnswerType) {
 
 const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
     const config = content[SURVEY_ENTITY_ID];
-    const [approvableAction, setApprovableAction] = useState(null as { onApprove: Function } | null);
     const [obj, setObj] = useState({} as any);
     const [objectId, setObjectId] = useState(props.objectId);
     const [answerType, setAnswerType] = useState<SurveyAnswerType | null>(null);
     const formikRef = useRef();
     const [initialValues, setInitialValues] = useState({});
-    const [selectConfig, setSelectConfig] = useState({});
+    const [questionObject, setQuestionObject] = useState({} as any);
+    const [selectOptions, setSelectOptions] = useState<SelectOption[]>([]);
 
     // Fetch possible existing object
     useEffect(() => {
@@ -56,34 +56,35 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
     }, [objectId]);
 
     const updateContent = () => {
-        var rangeConfig = { minRange: 0, maxRange: 10, stepsRange: 1 };
-        var selectConfig = [];
+        var questionObject = {} as any;
         if (objectId !== -1) {
             contentService.use(SURVEY_ENTITY_ID).getSingle(objectId).then((response) => {
                 setObj(response);
-                console.log(response);
-
                 const answerType = response.data.attributes.type as SurveyAnswerType;
                 setAnswerType(answerType);
                 if (answerType === SurveyAnswerType.RANGE) {
-                    rangeConfig = response.data.attributes["survey_question_range"].data.attributes;
+                    questionObject = response.data.attributes["survey_question_range"].data.attributes
+                    questionObject.id = response.data.attributes["survey_question_range"].data.id;
+                    setQuestionObject(questionObject);
                 }
                 if (answerType === SurveyAnswerType.SELECT) {
-                    setSelectConfig(response.data.attributes["survey_question_select"].data.attributes);
+                    questionObject = response.data.attributes["survey_question_select"].data.attributes
+                    questionObject.id = response.data.attributes["survey_question_select"].data.id;
+                    setQuestionObject(questionObject);
                 }
                 setInitialValues({
                     type: SurveyAnswerType.FREE_TEXT,
-                    minRange: rangeConfig.minRange,
-                    maxRange: rangeConfig.maxRange,
-                    stepsRange: rangeConfig.stepsRange
+                    minRange: questionObject.minRange,
+                    maxRange: questionObject.maxRange,
+                    stepsRange: questionObject.stepsRange
                 });
             });
         }
         setInitialValues({
             type: SurveyAnswerType.FREE_TEXT,
-            minRange: rangeConfig.minRange,
-            maxRange: rangeConfig.maxRange,
-            stepsRange: rangeConfig.stepsRange
+            minRange: questionObject.minRange,
+            maxRange: questionObject.maxRange,
+            stepsRange: questionObject.stepsRange
         });
     }
 
@@ -96,8 +97,6 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
         const surveyQuestionId = objectId === -1 ? values.survey_id : objectId;
         const previousType = obj.data ? obj.data.attributes.type as SurveyAnswerType : null;
         const previousConfig = previousType ? getAnswerConfiguration(obj, previousType) : null;
-
-        console.log(`Previous: ${previousType} - Now: ${answerType}`);
 
         if (previousType !== answerType) { // Type was changed, delete previous one if exists    
             if (previousConfig && previousType)
@@ -114,6 +113,19 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
                     stepsRange: values.stepsRange,
                 }));
             }
+            if (answerType === SurveyAnswerType.SELECT) {
+                const selectOptionIds = [];
+                for (const selectOption of selectOptions) {
+                    const response = await contentService.use(surveySelectChoiceAPIKey).create(config.putData({
+                        choiceText: selectOption.label,
+                    }));
+                    selectOptionIds.push(response.data.id);
+                }
+                await contentService.use(answerTypeToAPIKey[answerType]).create(config.putData({
+                    survey_question: surveyQuestionId,
+                    survey_question_select_choices: selectOptionIds,
+                }));
+            }
         } else { // Type was not changed
             if (answerType === SurveyAnswerType.RANGE) {
                 // Check if a config field was changed
@@ -128,6 +140,36 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
                         stepsRange: values.stepsRange,
                     }), previousConfig.id);
                 }
+            }
+            if (answerType === SurveyAnswerType.SELECT) {
+                const selectOptionIds = [];
+                for (const selectOption of selectOptions) {
+                    if (selectOption.deleted) {
+                        await contentService.use(surveySelectChoiceAPIKey).deleteEntity(selectOption.id);
+                    } else {
+                        if (selectOption.id === -1) {
+                            // Create new select option
+                            const response = await contentService.use(surveySelectChoiceAPIKey).create(config.putData({
+                                survey_question: surveyQuestionId,
+                                choiceText: selectOption.label,
+                            }));
+                            selectOptionIds.push(response.data.id);
+                        } else if (selectOption.id !== -1 && selectOption.changed) {
+                            // Update existing select option
+                            const response = await contentService.use(surveySelectChoiceAPIKey).update(config.putData({
+                                choiceText: selectOption.label,
+                            }), selectOption.id);
+                            selectOptionIds.push(response.data.id);
+                        } else {
+                            // No changes, keep existing select option
+                            selectOptionIds.push(selectOption.id);
+                        }
+                    }
+                }
+                await contentService.use(answerTypeToAPIKey[answerType]).update(config.putData({
+                    survey_question: surveyQuestionId,
+                    survey_question_select_choices: selectOptionIds,
+                }), previousConfig.id);
             }
         }
         setSubmitting(false);
@@ -199,6 +241,15 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
                                                 onBlur={handleBlur}
                                             />
                                         </Stack>
+                                    </Box>
+                                }
+                                {answerType === SurveyAnswerType.SELECT &&
+                                    <Box>
+                                        <SurveySelectEditor
+                                            id="survey_question_select_editor"
+                                            questionObject={questionObject}
+                                            onChange={setSelectOptions}
+                                        />
                                     </Box>
                                 }
                             </form>
