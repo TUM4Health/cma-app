@@ -79,6 +79,9 @@ function renderCell(type: string) {
                 );
             }
         }
+        if (type.match('enum:.*')) {
+            return <Chip label={params.value} />
+        }
     };
 }
 
