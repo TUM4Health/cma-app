@@ -4,7 +4,7 @@ import { SURVEY_ENTITY_ID } from "../../pages/survey/survey.page";
 import { contentService } from '../../services/content.service';
 import SimpleBarChart from './simple-bar-chart';
 import { answerTypeToAPIKey, answerTypeToObjectField, SurveyAnswerType } from './SurveyEditManager';
-import { List, ListItem, ListItemText, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextareaAutosize, Typography } from '@mui/material';
+import { CircularProgress, List, ListItem, ListItemText, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextareaAutosize, Typography } from '@mui/material';
 import { log } from 'console';
 import { DataGrid, GridCallbackDetails, GridRowParams, MuiEvent } from "@mui/x-data-grid";
 import { Box } from "@mui/system";
@@ -68,22 +68,25 @@ const SurveyResultManager: FC<any> = (props: Props): ReactElement => {
         }
     }
 
+    const viewReady = obj && obj.data && resultObject && questionObject;
     return (
         <>
-            {obj && obj.data &&
-                <>
+            {viewReady &&
+                <Paper elevation={2} sx={{ p: 2 }}>
                     <Typography variant="h2">{obj.data.attributes.question}</Typography>
                     {answerType === SurveyAnswerType.RANGE &&
                         (
                             <>
                                 {questionObject && <Typography>On a range from {questionObject.minRange} to {questionObject.maxRange} with a step-size of {questionObject.stepsRange}:</Typography>}
-                                <SimpleBarChart
-                                    id="test"
-                                    width="500"
-                                    height="350"
-                                    xAxisLabels={Object.keys(resultObject)}
-                                    data={[{ name: "Answers", data: Object.values(resultObject) }]}
-                                />
+                                <Box sx={{ mt: 2 }} >
+                                    <SimpleBarChart
+                                        id="test"
+                                        width="500"
+                                        height="350"
+                                        xAxisLabels={Object.keys(resultObject)}
+                                        data={[{ name: "Answers", data: Object.values(resultObject) }]}
+                                    />
+                                </Box>
                             </>)
                     }
                     {answerType === SurveyAnswerType.FREE_TEXT &&
@@ -105,7 +108,7 @@ const SurveyResultManager: FC<any> = (props: Props): ReactElement => {
                                     />
                                 </Box>
                                 {clickedRow && Object.keys(clickedRow).length > 0 &&
-                                    <Paper elevation={2} sx={{ mt: 2, p: 2 }}>
+                                    <Paper variant="outlined" sx={{ mt: 2, p: 2 }}>
                                         <Typography variant="h5">Selected Response</Typography>
                                         <table>
                                             <tr>
@@ -120,8 +123,10 @@ const SurveyResultManager: FC<any> = (props: Props): ReactElement => {
                                     </Paper>}
                             </>)
                     }
-                </>
+                </Paper>
             }
+            {!viewReady &&
+                <CircularProgress />}
         </>
     );
 };
