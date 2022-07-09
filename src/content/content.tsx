@@ -38,6 +38,7 @@ export interface EntityField {
     editable?: boolean,
     viewable?: boolean,
     localizable?: boolean,
+    required?: boolean,
 }
 
 export const defaultLocale = { key: "en", label: "English", };

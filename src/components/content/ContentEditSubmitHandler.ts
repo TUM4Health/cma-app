@@ -130,7 +130,21 @@ export default function submitContent({ values,
                     console.error(error);
                     setSubmitting(false);
                     setSuccess(null);
-                    setError("An Error has occurred, please try again! (" + error + ")");
+                    if (error.data && error.data.error) {
+                        const errorInfo = error.data.error;
+                        if (errorInfo.name === "ValidationError") {
+                            setError("A Validation Error ocurred!");
+                        }
+                        if (errorInfo.details && errorInfo.details.errors) {
+                            errorInfo.details.errors.forEach((errorDetail: any) => {
+                                if (errorDetail.path.length === 1) {
+                                    setFieldError(errorDetail.path[0], `${errorDetail.name}: ${errorDetail.message}`);
+                                }
+                            })
+                        }
+                    } else {
+                        setError("An unknown Error has occurred, please try again! (" + error + ")");
+                    }
                 });
         } else {
             // Update

@@ -15,30 +15,29 @@ interface Props {
     objectId: number,
 }
 
-enum SurveyAnswerType {
+export enum SurveyAnswerType {
     FREE_TEXT = "freetext",
     RANGE = "range",
-    SELECT = "select",
+    SELECT = "select"
 }
 
-const answerTypeToAPIKey = {
+export const answerTypeToAPIKey = {
     freetext: "survey-question-freetexts",
     range: "survey-question-ranges",
     select: "survey-question-selects",
+}
+
+export const answerTypeToObjectField = {
+    freetext: "survey_question_freetext",
+    range: "survey_question_range",
+    select: "survey_question_select",
 }
 
 function getAnswerConfiguration(obj: any, type: SurveyAnswerType) {
     if (!obj.data) {
         return null;
     }
-    var key = "survey_question_freetext";
-    if (type === SurveyAnswerType.RANGE) {
-        key = "survey_question_range";
-    }
-    if (type === SurveyAnswerType.SELECT) {
-        key = "survey_question_select";
-    }
-    return obj.data.attributes[key].data;
+    return obj.data.attributes[answerTypeToObjectField[type]].data;
 }
 
 const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
@@ -46,7 +45,7 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
     const [approvableAction, setApprovableAction] = useState(null as { onApprove: Function } | null);
     const [obj, setObj] = useState({} as any);
     const [objectId, setObjectId] = useState(props.objectId);
-    const [answerType, setAnswerType] = useState(SurveyAnswerType.FREE_TEXT);
+    const [answerType, setAnswerType] = useState<SurveyAnswerType | null>(null);
     const formikRef = useRef();
     const [initialValues, setInitialValues] = useState({});
     const [selectConfig, setSelectConfig] = useState({});
@@ -95,13 +94,13 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
 
     const submitSurveyConfiguration = async (values: any, setSubmitting: (isSubmitting: boolean) => void) => {
         const surveyQuestionId = objectId === -1 ? values.survey_id : objectId;
-        const previousType = obj.data.attributes.type as SurveyAnswerType;
-        const previousConfig = getAnswerConfiguration(obj, previousType);
+        const previousType = obj.data ? obj.data.attributes.type as SurveyAnswerType : null;
+        const previousConfig = previousType ? getAnswerConfiguration(obj, previousType) : null;
 
         console.log(`Previous: ${previousType} - Now: ${answerType}`);
 
         if (previousType !== answerType) { // Type was changed, delete previous one if exists    
-            if (previousConfig)
+            if (previousConfig && previousType)
                 await contentService.use(answerTypeToAPIKey[previousType]).deleteEntity(previousConfig.id);
             // Now create new answer type
             if (answerType === SurveyAnswerType.FREE_TEXT) {
