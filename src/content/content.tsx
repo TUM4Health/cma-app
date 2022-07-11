@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService, People, QuestionAnswer, PieChart } from '@mui/icons-material';
+import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService, People, QuestionAnswer, PieChart, Event } from '@mui/icons-material';
 import {
     IconButton,
 } from "@mui/material";
@@ -171,6 +171,24 @@ const content: { [key: string]: ContentConfiguration } = {
         getAttributes: (a) => a.attributes,
         putData: (a) => ({ data: a }),
     },
+    "calendar-events": {
+        title: "Calendar-Events",
+        apiId: "calendar-events",
+        entityFields: [
+            { name: "ID", key: "id", type: "number", viewable: false, editable: true },
+            { name: "Title", key: "title", type: "string", editable: true, localizable: true },
+            { name: "Location", key: "location", type: "string", editable: true, localizable: true },
+            { name: "Description", key: "description", type: "richtext", editable: true, localizable: true },
+            { name: "Start-Date", key: "startDate", type: "datetime", editable: true, required: true },
+            { name: "End-Date", key: "endDate", type: "datetime", editable: true, required: false },
+        ],
+        hideFromPreview: ["id", "description"],
+        icon: <Event />,
+        publishable: true,
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
+    },
     "survey-questions": {
         title: "Survey",
         pluralTitle: "Survey",
@@ -214,7 +232,8 @@ export const navigationStructure: NavigationStructure = {
         "covids",
         "doctors",
         "locations",
-        "offerings",],
+        "offerings",
+        "calendar-events",],
     "Interactive": [
         "survey-questions"]
 };

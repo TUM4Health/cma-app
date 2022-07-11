@@ -135,6 +135,9 @@ export default function submitContent({ values,
                         if (errorInfo.name === "ValidationError") {
                             setError("A Validation Error ocurred!");
                         }
+                        if (errorInfo.name === "ForbiddenError") {
+                            setError("You do not have permission to create this entry!");
+                        }
                         if (errorInfo.details && errorInfo.details.errors) {
                             errorInfo.details.errors.forEach((errorDetail: any) => {
                                 if (errorDetail.path.length === 1) {
@@ -174,6 +177,9 @@ export default function submitContent({ values,
                         const errorInfo = error.data.error;
                         if (errorInfo.name === "ValidationError") {
                             setError("A Validation Error ocurred!");
+                        }
+                        if (errorInfo.name === "ForbiddenError") {
+                            setError("You do not have permission to edit this entry!");
                         }
                         if (errorInfo.details && errorInfo.details.errors) {
                             errorInfo.details.errors.forEach((errorDetail: any) => {

@@ -7,11 +7,13 @@ import {
     IconButton,
     Skeleton,
     Tooltip,
+    Typography
 } from "@mui/material";
 import {
     DataGrid,
     GridCellParams,
     GridColDef,
+    GridValueFormatterParams,
     GridValueGetterParams,
 } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
@@ -21,6 +23,7 @@ import { contentService } from "../../services/content.service";
 import { getImageUrl } from "../../services/upload.service";
 import ApproveDialog from "../util/ApproveDialog";
 import { ContentConfiguration } from "../../content/content";
+import { format } from "date-fns";
 
 interface Props {
     entityName: string;
@@ -85,6 +88,17 @@ function renderCell(type: string) {
     };
 }
 
+const muiTypeMapping: { [key: string]: string } = {
+    "datetime": "date",
+}
+function getMUIType(type: string): string {
+    if (["string", "date", "number"].includes(type)) {
+        return type;
+    } else {
+        return muiTypeMapping[type];
+    }
+}
+
 export default function ContentList(props: React.PropsWithChildren<Props>) {
     const [dataContent, setContent] = useState(null as any[] | null);
     const [columns, setColumns] = useState([] as GridColDef[]);
@@ -126,11 +140,16 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
                 ({
                     field: entityField.key,
                     headerName: entityField.name,
-                    type: entityField.type,
+                    type: getMUIType(entityField.type),
                     width: 160,
                     renderCell: ["string", "date", "number"].includes(entityField.type)
                         ? null
                         : renderCell(entityField.type),
+                    valueFormatter: !["datetime"].includes(entityField.type)
+                        ? null
+                        : (params: GridValueFormatterParams) => {
+                            return format(new Date(params.value), "dd.MM.yyyy HH:mm");
+                        }
                 } as GridColDef)
             );
 

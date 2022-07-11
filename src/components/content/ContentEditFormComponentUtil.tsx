@@ -4,6 +4,7 @@ import { EntityField } from "../../content/content";
 import RichEditor from "../editor/RichEditor";
 import FileUploadField from "../form/FileUploadField";
 import FormDateField from "../form/FormDateField";
+import FormDateTimeField from "../form/FormDateTimeField";
 import RefSelectorField from "../form/RefSelectorField";
 import SimpleSelect from "../form/SimpleSelect";
 
@@ -74,6 +75,14 @@ export default function getFormComponent(values: any, field: EntityField, handle
             key={field.key}
             name={field.key}
             helperText={""}
+            label={field.name} />;
+    }
+    if (field.type === "datetime") {
+        return <FormDateTimeField
+            key={field.key}
+            name={field.key}
+            helperText={""}
+            required={field.required}
             label={field.name} />;
     }
     if (field.type === "image") {

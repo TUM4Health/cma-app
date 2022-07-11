@@ -8,6 +8,7 @@ import { CircularProgress, List, ListItem, ListItemText, Paper, Table, TableBody
 import { log } from 'console';
 import { DataGrid, GridCallbackDetails, GridRowParams, MuiEvent } from "@mui/x-data-grid";
 import { Box } from "@mui/system";
+import { format } from "date-fns";
 
 interface Props {
     objectId: number,
@@ -71,7 +72,7 @@ const SurveyResultManager: FC<any> = (props: Props): ReactElement => {
                     var answers = { responses: [] as any[] };
                     var responseIndex = 0;
                     questionObj.survey_response_freetexts.data.forEach((response: any) => {
-                        const formattedCreatedAt = new Date(response.attributes.createdAt).toLocaleString();
+                        const formattedCreatedAt = format(new Date(response.attributes.createdAt), "dd.MM.yyyy HH:mm");
                         answers.responses.push({ id: responseIndex, response: response.attributes.response, createdAt: formattedCreatedAt });
                         responseIndex++;
                     });
