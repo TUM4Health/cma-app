@@ -21,7 +21,7 @@ const DashboardPage: FC<any> = (): ReactElement => {
                         Object.keys(content).map((key) => {
                             const item = content[key];
                             return (
-                                <Grid item xs={12} sm={6} md={4} key={item.title}>
+                                <Grid item xs={12} md={6} lg={4} key={item.title}>
                                     <Box sx={{ p: 2 }}>
                                         <Paper variant="outlined">
                                             <Box sx={{ p: 2 }}>
