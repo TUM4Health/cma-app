@@ -145,13 +145,14 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
                     renderCell: ["string", "date", "number"].includes(entityField.type)
                         ? null
                         : renderCell(entityField.type),
-                    valueFormatter: !["datetime"].includes(entityField.type)
+                    valueFormatter: ["datetime", "date"].includes(entityField.type)
                         ? (params: GridValueFormatterParams) => {
-                            return !params.value || params.value === '' ? "―" : params.value;
+                            const dateFormat = entityField.type === "datetime" ? "dd.MM.yyyy HH:mm" : "dd.MM.yyyy";
+                            return params.value ? format(new Date(params.value), dateFormat) : "―";
                         }
                         : (params: GridValueFormatterParams) => {
-                            return params.value ? format(new Date(params.value), "dd.MM.yyyy HH:mm") : "―";
-                        }
+                            return !params.value || params.value === '' ? "―" : params.value;
+                        },
                 } as GridColDef)
             );
 

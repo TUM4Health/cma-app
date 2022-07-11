@@ -113,7 +113,7 @@ export default function submitContent({ values,
         if (objectId === -1) { // Create
             var service = contentService.use(entityId);
             // Creating localized entry
-            var putData = config.putData(nonFileFields);
+            var putData = namedFiles.length > 0 ? nonFileFields : config.putData(nonFileFields); // If files are involved, putData is not required
             if (isLocalizationMode && objectId === -1) {
                 service = contentService.useLocalized(entityId, localizationConfiguration.id);
                 nonFileFields["locale"] = localizationConfiguration.locale;
