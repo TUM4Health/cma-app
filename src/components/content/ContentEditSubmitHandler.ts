@@ -98,6 +98,10 @@ export default function submitContent({ values,
                 } else {
                     nonFileFields[field.key] = values[field.key].id;
                 }
+            } else if (field.type === "date" || field.type === "datetime") {
+                if (values[field.key] !== '') { // If value is empty, do not add it to the request
+                    nonFileFields[field.key] = values[field.key];
+                }
             } else {
                 nonFileFields[field.key] = values[field.key];
             }
