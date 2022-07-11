@@ -4,8 +4,7 @@ import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { Box, TextField } from "@mui/material";
 import deLocale from "date-fns/locale/de";
 import { useField } from "formik";
-import PropTypes from "prop-types";
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 export type Props = {
     label: string,
@@ -16,12 +15,12 @@ export type Props = {
 
 
 export default function FormDateTimeField({ label, ...props }: Props) {
-    const [field, meta, { setValue, setTouched, setError }] = useField(props);
+    const [field, meta, { setValue, setError }] = useField(props);
     useEffect(() => {
         if (field.value === null && props.required) {
             setError(`${label} is required!`);
         }
-    }, [field]);
+    }, [field, label, props.required, setError]);
 
     return (
         <Box sx={{ my: 2 }}>

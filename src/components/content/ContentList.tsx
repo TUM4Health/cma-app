@@ -1,4 +1,4 @@
-import { Check, Delete, DoneAll, Edit, Unpublished } from "@mui/icons-material";
+import { Delete, DoneAll, Edit, Unpublished } from "@mui/icons-material";
 import {
     Avatar,
     Backdrop,
@@ -6,24 +6,22 @@ import {
     CircularProgress,
     IconButton,
     Skeleton,
-    Tooltip,
-    Typography
+    Tooltip
 } from "@mui/material";
 import {
     DataGrid,
     GridCellParams,
     GridColDef,
     GridValueFormatterParams,
-    GridValueGetterParams,
+    GridValueGetterParams
 } from "@mui/x-data-grid";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import content, { EntityField } from "../../content/content";
+import content, { ContentConfiguration, EntityField } from "../../content/content";
 import { contentService } from "../../services/content.service";
 import { getImageUrl } from "../../services/upload.service";
 import ApproveDialog from "../util/ApproveDialog";
-import { ContentConfiguration } from "../../content/content";
-import { format } from "date-fns";
 
 interface Props {
     entityName: string;
@@ -202,7 +200,7 @@ export default function ContentList(props: React.PropsWithChildren<Props>) {
             .catch((error) => {
                 setContent([]); // TODO: add error handling
             });
-    }, [props]);
+    }, [props, config]);
 
     if (columns.length === 0 || dataContent == null) {
         return (
