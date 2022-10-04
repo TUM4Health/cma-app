@@ -1,6 +1,9 @@
 import { ReactElement } from 'react';
-import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService, People } from '@mui/icons-material';
-
+import { Newspaper, MedicalInformation, Coronavirus, MedicalServices, LocationCity, RoomService, People, QuestionAnswer, PieChart, Event } from '@mui/icons-material';
+import {
+    IconButton,
+} from "@mui/material";
+import { Link } from 'react-router-dom';
 export interface ContentConfiguration {
     title: string,
     pluralTitle?: string,
@@ -9,14 +12,23 @@ export interface ContentConfiguration {
     icon: ReactElement,
     apiId: string,
     publishable: boolean,
+    customActions?: CustomAction[],
     getData: GetDataFunction,
     putData: PutDataFunction,
-    getAttributes: GetAttributesFunction
+    getAttributes: GetAttributesFunction,
+    editPathGenerator?: CustomEditPathGenerator
+}
+
+export interface CustomAction {
+    buttonGenerator: CustomActionButtonGenerator,
+    tooltipTile: string
 }
 
 type GetAttributesFunction = (a: any) => any;
 type GetDataFunction = (a: any) => any[] | any;
 type PutDataFunction = (a: any) => any[] | any;
+type CustomEditPathGenerator = (entityId: string, objectId: string | number) => string;
+type CustomActionButtonGenerator = (entitiyId: string, objectId: string | number) => ReactElement;
 
 export interface EntityField {
     name: string,
@@ -26,6 +38,7 @@ export interface EntityField {
     editable?: boolean,
     viewable?: boolean,
     localizable?: boolean,
+    required?: boolean,
 }
 
 export const defaultLocale = { key: "en", label: "English", };
@@ -157,6 +170,56 @@ const content: { [key: string]: ContentConfiguration } = {
         getData: (a) => a.data,
         getAttributes: (a) => a.attributes,
         putData: (a) => ({ data: a }),
+    },
+    "calendar-events": {
+        title: "Calendar-Events",
+        apiId: "calendar-events",
+        entityFields: [
+            { name: "ID", key: "id", type: "number", viewable: false, editable: true },
+            { name: "Title", key: "title", type: "string", editable: true, localizable: true },
+            { name: "Location", key: "location", type: "string", editable: true, localizable: true },
+            { name: "Description", key: "description", type: "richtext", editable: true, localizable: true },
+            { name: "Start-Date", key: "startDate", type: "datetime", editable: true, required: true },
+            { name: "End-Date", key: "endDate", type: "datetime", editable: true, required: false },
+        ],
+        hideFromPreview: ["id", "description"],
+        icon: <Event />,
+        publishable: true,
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
+    },
+    "survey-questions": {
+        title: "Survey",
+        pluralTitle: "Survey",
+        apiId: "survey-questions",
+        entityFields: [
+            { name: "ID", key: "id", type: "number", viewable: false, editable: true },
+            { name: "Question", key: "question", type: "string", editable: true, localizable: false },
+            { name: "Type", key: "type", type: "enum:freetext;range;select", editable: true, localizable: false },
+        ],
+        hideFromPreview: ["id"],
+        icon: <QuestionAnswer />,
+        publishable: true,
+        editPathGenerator: (entityId, id) => { return `/survey/${id}`; },
+        getData: (a) => a.data,
+        getAttributes: (a) => a.attributes,
+        putData: (a) => ({ data: a }),
+        customActions: [
+            {
+                tooltipTile: "Show Survey Results",
+                buttonGenerator: (entityId, objectId) => (
+                    <IconButton
+                        component={Link}
+                        to={
+                            `/survey/${objectId}/results`
+                        }
+                    >
+                        <PieChart />
+                    </IconButton>
+                )
+            }
+        ]
     }
 };
 
@@ -169,7 +232,10 @@ export const navigationStructure: NavigationStructure = {
         "covids",
         "doctors",
         "locations",
-        "offerings"]
+        "offerings",
+        "calendar-events",],
+    "Interactive": [
+        "survey-questions"]
 };
 
 export default content;

@@ -20,7 +20,6 @@ const BackgroundImage = styled('img')(({ theme }) => ({
 
 const LoginPage: FC<any> = (): ReactElement => {
     const navigate = useNavigate();
-    console.log(authenticationService.currentUserValue.jwt);
 
     useEffect(() => {
         if (authenticationService.currentUserValue.jwt != null) {

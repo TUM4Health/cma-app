@@ -9,6 +9,8 @@ import DashboardPage from './pages/dashboard/dashboard.page';
 import LoginPage from './pages/login/login.page';
 import reportWebVitals from './reportWebVitals';
 import ThemeConfig from './theme/theme';
+import SurveyPage from './pages/survey/survey.page';
+import SurveyResultsPage from './pages/survey/survey_results.page';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -27,6 +29,8 @@ root.render(
           <Route path='/' element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<DashboardPage />} />} />
           <Route path="/content/:entityId/edit/:id" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentEditPage />} />} />
           <Route path="/content/:entityId" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<ContentPage />} />} />
+          <Route path="/survey/:id" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<SurveyPage />} />} />
+          <Route path="/survey/:id/results" element={<ProtectedRoute {...defaultProtectedRouteProps} outlet={<SurveyResultsPage />} />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

@@ -9,25 +9,27 @@ import content from "../../content/content";
 const ContentPage: FC<any> = (): ReactElement => {
     let params = useParams();
     const navigate = useNavigate();
-    const data = content[params.entityId!];
+    const config = content[params.entityId!];
     return (
         <ApplicationShell
-            title={`TUM4Health | ${data.pluralTitle ?? data.title}`}
+            title={`TUM4Health | ${config.pluralTitle ?? config.title}`}
             actionItems={[
                 {
-                    title: `Create new ${data.title}`,
+                    title: `Create new ${config.title}`,
                     icon: <Add />,
                     onClick: () => {
-                        navigate(`/content/${params.entityId!}/edit/new`);
+                        navigate(config.editPathGenerator
+                            ? config.editPathGenerator(params.entityId!, "new")
+                            : `/content/${params.entityId}/edit/new`);
                     }
                 }
             ]}
         >
             <ContentManager
                 entityId={params.entityId!}
-                entityName={data.title}
-                entityFields={data.entityFields}
-                hideFromPreview={data.hideFromPreview}
+                entityName={config.title}
+                entityFields={config.entityFields}
+                hideFromPreview={config.hideFromPreview}
             />
         </ApplicationShell>
     );

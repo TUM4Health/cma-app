@@ -3,7 +3,7 @@ import { contentService } from '../../services/content.service';
 import { NamedFile } from '../../services/generic_crud.service';
 import { deleteFile, uploadFiles } from '../../services/upload.service';
 import { AutocompleteOption } from '../form/RefSelectorField';
-import { LocalizationConfiguration } from './ContentEditManager';
+import { AfterSubmitFunction, LocalizationConfiguration } from './ContentEditManager';
 
 function isArrayOfStrings(obj: any[]) {
     if (typeof obj != "object" || !Array.isArray(obj))
@@ -47,7 +47,8 @@ export interface Props {
     published: boolean,
     setError: Function,
     setSuccess: Function,
-    localizationConfiguration: LocalizationConfiguration
+    localizationConfiguration: LocalizationConfiguration,
+    afterSubmit?: AfterSubmitFunction
 }
 
 export default function submitContent({ values,
@@ -61,6 +62,7 @@ export default function submitContent({ values,
     published,
     setError,
     setSuccess,
+    afterSubmit,
     localizationConfiguration }: Props) {
     const nonFileFields: { [key: string]: any } = {};
     const namedFiles: NamedFile[] = [];
@@ -96,6 +98,10 @@ export default function submitContent({ values,
                 } else {
                     nonFileFields[field.key] = values[field.key].id;
                 }
+            } else if (field.type === "date" || field.type === "datetime") {
+                if (values[field.key] !== '') { // If value is empty, do not add it to the request
+                    nonFileFields[field.key] = values[field.key];
+                }
             } else {
                 nonFileFields[field.key] = values[field.key];
             }
@@ -107,17 +113,20 @@ export default function submitContent({ values,
         if (objectId === -1) { // Create
             var service = contentService.use(entityId);
             // Creating localized entry
+            var putData = namedFiles.length > 0 ? nonFileFields : config.putData(nonFileFields); // If files are involved, putData is not required
             if (isLocalizationMode && objectId === -1) {
                 service = contentService.useLocalized(entityId, localizationConfiguration.id);
                 nonFileFields["locale"] = localizationConfiguration.locale;
+                putData = nonFileFields;
             }
             delete nonFileFields.id; // Remove id as is empty anyway
-            (namedFiles.length > 0 ? service.createWithFiles(nonFileFields, namedFiles)
-                : service.create(nonFileFields))
+            (namedFiles.length > 0 ? service.createWithFiles(putData, namedFiles)
+                : service.create(putData))
                 .then((resp) => {
                     setSubmitting(false);
                     var id = isLocalizationMode ? resp.id : config.getData(resp).id;
                     setObjectId(id);
+                    afterSubmit && afterSubmit(id);
                     window.history.replaceState(null, "", window.location.pathname.slice(0, -3) + id)
                     setError(null);
                     setSuccess("Entry created!");
@@ -125,7 +134,24 @@ export default function submitContent({ values,
                     console.error(error);
                     setSubmitting(false);
                     setSuccess(null);
-                    setError("An Error has occurred, please try again! (" + error + ")");
+                    if (error.data && error.data.error) {
+                        const errorInfo = error.data.error;
+                        if (errorInfo.name === "ValidationError") {
+                            setError("A Validation Error ocurred!");
+                        }
+                        if (errorInfo.name === "ForbiddenError") {
+                            setError("You do not have permission to create this entry!");
+                        }
+                        if (errorInfo.details && errorInfo.details.errors) {
+                            errorInfo.details.errors.forEach((errorDetail: any) => {
+                                if (errorDetail.path.length === 1) {
+                                    setFieldError(errorDetail.path[0], `${errorDetail.name}: ${errorDetail.message}`);
+                                }
+                            })
+                        }
+                    } else {
+                        setError("An unknown Error has occurred, please try again! (" + error + ")");
+                    }
                 });
         } else {
             // Update
@@ -142,6 +168,7 @@ export default function submitContent({ values,
                         ),
                         ...oldImageIds.map((id) => deleteFile(id))]
                     )
+                    afterSubmit && afterSubmit(objectId);
                     setSubmitting(false);
                     setError(null);
                     setSuccess("Entry updated!");
@@ -154,6 +181,9 @@ export default function submitContent({ values,
                         const errorInfo = error.data.error;
                         if (errorInfo.name === "ValidationError") {
                             setError("A Validation Error ocurred!");
+                        }
+                        if (errorInfo.name === "ForbiddenError") {
+                            setError("You do not have permission to edit this entry!");
                         }
                         if (errorInfo.details && errorInfo.details.errors) {
                             errorInfo.details.errors.forEach((errorDetail: any) => {

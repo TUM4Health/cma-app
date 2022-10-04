@@ -1,6 +1,6 @@
-import { Done, Restore } from '@mui/icons-material';
+import { Done } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { Alert, Backdrop, Box, Button, CircularProgress, FormControlLabel, FormGroup, Stack, Switch, Toolbar, Tooltip, Typography } from '@mui/material';
+import { Alert, Backdrop, Box, CircularProgress, FormControlLabel, FormGroup, Stack, Switch, Toolbar, Tooltip, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import { useEffect, useMemo, useState } from 'react';
 import { createSearchParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -8,16 +8,20 @@ import content, { contentLocales, defaultLocale, EntityField } from '../../conte
 import { contentService } from '../../services/content.service';
 import { getImageUrl, getImageUrls } from '../../services/upload.service';
 import { getEmptyValueByType } from '../../utils/typeUtil';
+import FormObserver from '../form/FormObserver';
 import { getItemAsValue } from '../form/RefSelectorField';
 import SimpleSelect from '../form/SimpleSelect';
+import ApproveDialog from '../util/ApproveDialog';
 import getFormComponent from './ContentEditFormComponentUtil';
 import submitContent from './ContentEditSubmitHandler';
-import ApproveDialog from '../util/ApproveDialog';
-import { publish } from 'rxjs';
+
+export type AfterSubmitFunction = (id: number) => any;
 
 interface Props {
     entityId: string,
     objectId: number,
+    afterSubmit?: AfterSubmitFunction
+    onChange?: (values: any) => any,
 }
 
 export interface LocalizationConfiguration {
@@ -90,7 +94,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             setObj(newObj);
             setPublished(false);
         }
-    }, [props, config.entityFields, objectId, isLocalizationMode, requestedLocale]);
+    }, [props.entityId, config.entityFields, objectId, isLocalizationMode, requestedLocale]);
 
     // Prefill form and setup formik with initalValues if data is retrieved
     useEffect(() => {
@@ -215,6 +219,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             initialValues={initialValues}
             onSubmit={(values: any, { setSubmitting, setFieldError }) => {
                 const entityId = props.entityId;
+                const afterSubmit = props.afterSubmit;
                 submitContent({
                     values,
                     setSubmitting,
@@ -227,9 +232,9 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
                     published,
                     setError,
                     setSuccess,
-                    localizationConfiguration
+                    afterSubmit,
+                    localizationConfiguration,
                 });
-
             }}
         >
             {({
@@ -243,6 +248,7 @@ export default function ContentEditManager(props: React.PropsWithChildren<Props>
             }) => (
                 <>
                     <form onSubmit={handleSubmit}>
+                        <FormObserver onValuesChanged={props.onChange} />
                         <Toolbar>
                             <Typography variant="h4" component="h1" sx={{ mb: 2 }} >
                                 {objectId === -1 ? ("Create" + (isLocalizationMode ? " localization for " : "")) : "Edit"}
