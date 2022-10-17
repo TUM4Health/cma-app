@@ -77,7 +77,7 @@ const content: { [key: string]: ContentConfiguration } = {
             { name: "Article Text", key: "articleText", type: "richtext", editable: true, localizable: true },
             { name: "Title-Image", key: "titleImage", type: "image", editable: true, localizable: true },
             { name: "Article-Media", key: "articleMedia", type: "image", multiple: true, editable: true, localizable: true },
-            { name: "Tags", key: "tags", type: "string", editable: true, localizable: true },
+            { name: "Tags (comma-separated)", key: "tags", type: "string", editable: true, localizable: true },
         ],
         hideFromPreview: ["id", "articleText", "description", "titleImage", "articleMedia"],
         icon: <Newspaper />,
@@ -123,7 +123,7 @@ const content: { [key: string]: ContentConfiguration } = {
         entityFields: [
             { name: "ID", key: "id", type: "number", viewable: false },
             { name: "Location", key: "location", type: "ref:locations:title", editable: true, localizable: true },
-            { name: "Name", key: "name", type: "string", editable: true, localizable: true },
+            { name: "Name(s) (comma-separated)", key: "name", type: "string", editable: true, localizable: true },
             { name: "Phone Number", key: "phoneNumber", type: "string", editable: true, localizable: true },
             { name: "Room", key: "room", type: "string", editable: true, localizable: true },
             { name: "Mail", key: "mail", type: "string", editable: true, localizable: true },
