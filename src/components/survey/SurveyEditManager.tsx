@@ -46,6 +46,7 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
     const [objectId, setObjectId] = useState(props.objectId);
     const [answerType, setAnswerType] = useState<SurveyAnswerType | null>(null);
     const formikRef = useRef();
+    const proposedSurveyId = useRef(-1);
     const [initialValues, setInitialValues] = useState({});
     const [questionObject, setQuestionObject] = useState({} as any);
     const [selectOptions, setSelectOptions] = useState<SelectOption[]>([]);
@@ -57,8 +58,9 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
 
     const updateContent = () => {
         var questionObject = {} as any;
-        if (objectId !== -1) {
-            contentService.use(SURVEY_ENTITY_ID).getSingle(objectId).then((response) => {
+        const idToUse = objectId !== -1 ? objectId : proposedSurveyId.current;
+        if (idToUse !== -1) {
+            contentService.use(SURVEY_ENTITY_ID).getSingle(idToUse).then((response) => {
                 setObj(response);
                 const answerType = response.data.attributes.type as SurveyAnswerType;
                 setAnswerType(answerType);
@@ -91,13 +93,13 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
     const onSubmit = (id: number) => {
         (formikRef.current as any).values.survey_id = id;
         (formikRef.current as any).handleSubmit();
+        proposedSurveyId.current = id;
     }
 
     const submitSurveyConfiguration = async (values: any, setSubmitting: (isSubmitting: boolean) => void) => {
         const surveyQuestionId = objectId === -1 ? values.survey_id : objectId;
         const previousType = obj.data ? obj.data.attributes.type as SurveyAnswerType : null;
         const previousConfig = previousType ? getAnswerConfiguration(obj, previousType) : null;
-
         if (previousType !== answerType) { // Type was changed, delete previous one if exists    
             if (previousConfig && previousType)
                 await contentService.use(answerTypeToAPIKey[previousType]).deleteEntity(previousConfig.id);

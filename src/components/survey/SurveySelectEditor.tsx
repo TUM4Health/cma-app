@@ -83,9 +83,9 @@ export default function SurveySelectEditor({ id, questionObject, onChange }: Rea
         <List>
             {options
                 .filter((item) => !item.deleted)
-                .map((item) => (
+                .map((item, index) => (
                     <Grid
-                        key={item.id}
+                        key={index}
                         container
                         spacing={2}
                         rowSpacing={2}
