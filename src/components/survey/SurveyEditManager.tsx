@@ -57,7 +57,7 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
     }, [objectId]);
 
     const updateContent = () => {
-        var questionObject = {} as any;
+        var questionObject = { minRange: 1, maxRange: 10, stepsRange: 1 } as any;
         const idToUse = objectId !== -1 ? objectId : proposedSurveyId.current;
         if (idToUse !== -1) {
             contentService.use(SURVEY_ENTITY_ID).getSingle(idToUse).then((response) => {
@@ -218,7 +218,7 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
                                                 label={"Min-Range"} variant="outlined"
                                                 type="number"
                                                 name={"minRange"}
-                                                value={values["minRange"]}
+                                                value={values.minRange}
                                                 onChange={handleChange}
                                                 onBlur={handleBlur}
                                             />
@@ -228,7 +228,7 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
                                                 label={"Max-Range"} variant="outlined"
                                                 type="number"
                                                 name={"maxRange"}
-                                                value={values["maxRange"]}
+                                                value={values.maxRange}
                                                 onChange={handleChange}
                                                 onBlur={handleBlur}
                                             />
@@ -238,7 +238,7 @@ const SurveyEditManager: FC<any> = (props: Props): ReactElement => {
                                                 label={"Range-Steps"} variant="outlined"
                                                 type="number"
                                                 name={"stepsRange"}
-                                                value={values["stepsRange"]}
+                                                value={values.stepsRange}
                                                 onChange={handleChange}
                                                 onBlur={handleBlur}
                                             />
