@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { FC, ReactElement, useEffect, useState } from "react";
 import { SURVEY_ENTITY_ID } from "../../pages/survey/survey.page";
 import { contentService } from '../../services/content.service';
+import { getAccumulatedResponse } from '../../services/survey.service';
 import SimpleBarChart from './simple-bar-chart';
 import { answerTypeToAPIKey, answerTypeToObjectField, SurveyAnswerType } from './SurveyEditManager';
 
@@ -31,7 +32,12 @@ const SurveyResultManager: FC<any> = (props: Props): ReactElement => {
                     setQuestionObject(questionObj);
 
                     if (answerType === SurveyAnswerType.SELECT) {
-                        // TODO Implement Select response visualization
+                        const answers = await getAccumulatedResponse(answerItemId);
+                        var aggregatedAnswers: { [key: number]: number } = {};
+                        for (var option of questionObj.survey_question_select_choices.data) {
+                            aggregatedAnswers[option.attributes.choiceText] = answers[option.id];
+                        }
+                        setResultObject(aggregatedAnswers);
                     } else if (answerType === SurveyAnswerType.RANGE) {
                         var aggregatedAnswers: { [key: number]: number } = {};
                         for (var index = questionObj.minRange; index <= questionObj.maxRange; index += questionObj.stepsRange) {
